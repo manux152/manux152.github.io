@@ -183,4 +183,20 @@ export const RESOURCES: Record<string, Resource> = {
     { key: 'starts_on', label: 'Starts on (optional)', type: 'date' }, { key: 'ends_on', label: 'Ends on (optional; hides automatically)', type: 'date' },
     { key: 'show_footer', label: 'Show in website footer', type: 'bool' }, { key: 'show_home', label: 'Show on home page', type: 'bool' }, { key: 'show_match', label: 'Show on match pages', type: 'bool' },
     { key: 'sort_order', label: 'Order', type: 'number' }, { key: 'is_active', label: 'Shown', type: 'bool' } ] },
+  ads: { table: 'ads', title: 'Ads', permission: 'settings.manage', titleField: 'title', order: 'created_at', extraLink: { label: 'Ad report (views & clicks)', route: '/admin/ad-report' }, fields: [
+    { key: 'title', label: 'Internal name (only you see this)', type: 'text', required: true },
+    { key: 'advertiser', label: 'Advertiser / business name', type: 'text' },
+    { key: 'headline', label: 'Headline (max 120 characters)', type: 'text' }, { key: 'body', label: 'Short text (max 300 characters)', type: 'longtext' },
+    { key: 'image_url', label: 'Picture URL (https, wide 16:7 looks best)', type: 'text' },
+    { key: 'link_url', label: 'Where it leads (https link)', type: 'text' }, { key: 'cta_label', label: 'Button text (e.g. Book now)', type: 'text' },
+    { key: 'show_home', label: 'Show on home page', type: 'bool' }, { key: 'show_news', label: 'Show in news stories', type: 'bool' },
+    { key: 'show_match', label: 'Show on match pages', type: 'bool' }, { key: 'show_shop', label: 'Show in the shop', type: 'bool' }, { key: 'show_footer', label: 'Show in the website footer', type: 'bool' },
+    { key: 'weight', label: 'How often (1 = rarely … 10 = most often)', type: 'number' },
+    { key: 'starts_at', label: 'Starts (optional)', type: 'datetime' }, { key: 'ends_at', label: 'Ends (optional; hides automatically)', type: 'datetime' },
+    { key: 'max_impressions', label: 'Stop after this many views (optional)', type: 'number' },
+    { key: 'is_active', label: 'Switched on', type: 'bool' } ] },
+  seoPages: { table: 'seo_pages', title: 'Page search settings', permission: 'settings.manage', titleField: 'path', order: 'path', fields: [
+    { key: 'path', label: 'Page address (e.g. /shop, /news, /tryouts)', type: 'text', required: true },
+    { key: 'title', label: 'Title in Google (blank = automatic)', type: 'text' }, { key: 'description', label: 'Description in Google (about 150 characters)', type: 'longtext' },
+    { key: 'image_url', label: 'Share picture URL (https, optional)', type: 'text' }, { key: 'noindex', label: 'Hide this page from Google', type: 'bool' } ] },
 };

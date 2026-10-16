@@ -12,6 +12,7 @@ import { Hero } from '../../components/Hero';
 import { MatchTeams } from '../../components/MatchTeams';
 import { KickoffCountdown } from '../../components/PreMatchCard';
 import { PageHead } from '../../components/PageHead';
+import { AdSlot } from '../../components/AdSlot';
 import { money } from '../../lib/money';
 import { useLayout } from '../../lib/layout';
 import { PollCard } from '../../components/PollCard';
@@ -83,6 +84,7 @@ export default function Home() {
       <H>Matches</H>
       <Card><T muted>{n?.status === 'live' ? '🔴 Live now' : 'Next'}</T>{n ? <><MatchTeams match={n} /><T muted>{fmtDate(n.kickoff_at)}{n.venue ? ` · ${n.venue}` : ''}</T><KickoffCountdown match={n} /><Link href={`/match/${n.id}`}><T style={{ fontWeight: '700', textDecorationLine: 'underline' }}>Match details →</T></Link>{pred.data[0] && settings.predictions_enabled !== false ? <PredictionBar p={pred.data[0] as any} compact /> : null}{n.status === 'live' && settings.live_updates_enabled !== false ? <Link href={`/match/${n.id}`}><T style={{ fontWeight: '800' }}>{n.goals_for ?? 0} – {n.goals_against ?? 0} · Follow live →</T></Link> : null}</> : <T muted>No upcoming match</T>}</Card>
       <Card><T muted>Latest result</T>{l ? <MatchTeams match={l} /> : <T muted>No results yet</T>}</Card>
+      <AdSlot placement="home" />
       <SponsorStrip placement="home" />
     </Screen>
   );

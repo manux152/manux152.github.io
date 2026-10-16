@@ -6,6 +6,7 @@ import { useApp } from '../lib/app-context';
 import { useTheme } from '../lib/theme';
 import { Logo, safeUrl } from './Logo';
 import { SponsorSlider } from './SponsorSlider';
+import { AdSlot } from './AdSlot';
 
 const safe = (u?: string | null) => (u && /^(https?:\/\/|mailto:|tel:)/i.test(u) ? u : null);
 const SOCIAL_ICON: Record<string, string> = { instagram: '📸', facebook: '👍', twitter: '🐦', x: '✖', youtube: '▶', tiktok: '🎵', whatsapp: '💬', linkedin: '💼' };
@@ -80,6 +81,7 @@ export function SiteFooter() {
               </View>
             </View>
           </View>
+          <AdSlot placement="footer" />
           {sponsors.some((s) => s.show_footer) && (
             <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: colors.footerBorder, paddingTop: 22 }}>
               <Head>Our partners</Head>

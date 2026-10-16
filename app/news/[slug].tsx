@@ -9,6 +9,7 @@ import { shareText } from '../../lib/share';
 import { useApp } from '../../lib/app-context';
 import { useTable } from '../../lib/useQuery';
 import { PageHead } from '../../components/PageHead';
+import { AdSlot } from '../../components/AdSlot';
 import { useLayout } from '../../lib/layout';
 import { Person, fetchTagPeople, personHref } from '../../lib/tags';
 import { CommentsSection } from '../../components/CommentsSection';
@@ -35,12 +36,13 @@ export default function Post() {
   const light: LightItem[] = all.map((x, i) => ({ id: String(i), kind: 'image', url: x.url, title: p.title, caption: x.caption, meta: [`${p.category ? p.category + ' · ' : ''}${p.published_at ? fmtDate(p.published_at) : ''}`], people }));
   const offset = cover ? 1 : 0;
   return (
-    <Screen><PageHead title={p.title} description={p.summary || p.body} image={cover} />
+    <Screen><PageHead title={p.title} description={p.summary || p.body} image={cover} type="article" jsonLd={{ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: String(p.title).slice(0, 110), image: cover ? [cover] : undefined, datePublished: p.published_at || undefined, dateModified: p.updated_at || p.published_at || undefined, description: String(p.summary || p.body || '').slice(0, 200), publisher: { '@type': 'Organization', name: settings.team_name } }} />
       {cover ? <FullImage uri={cover} alt={coverCaption || p.title} onPress={() => setOpen(0)} /> : null}
       {coverCaption ? <T muted style={{ fontSize: 13 }}>{coverCaption}</T> : null}
       <T muted>{p.category ? `${p.category} · ` : ''}{p.published_at ? fmtDate(p.published_at) : ''}</T>
       <H>{p.title}</H>
       {String(p.body).split(/\n{2,}/).map((para: string, i: number) => <T key={i} style={{ lineHeight: 24 }}>{para}</T>)}
+      <AdSlot placement="news" />
       {people.length > 0 && (
         <View style={{ gap: 8 }}>
           <T style={{ fontWeight: '800' }}>People in this story</T>

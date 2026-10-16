@@ -281,3 +281,11 @@ Everything follows the language picked in Settings: screens, admin pages, page t
 2. Deploy `translate-text` (turn **off** "Verify JWT" so visitors can use it) and redeploy `team-assistant`, `news-ai`, `match-report`, `formation-ai`, `predict-match` (they now share `_shared/lang.ts`).
 3. `ANTHROPIC_API_KEY` must be set as a secret. Each phrase is translated once, then saved for everyone; text typed by people in chat is never translated.
 To improve a translation: edit `lib/i18nStrings.ts` (wins over automatic ones) or `delete from ui_translations where lang = 'es';`.
+
+## Phase 30 (search visibility + ads, all from Admin)
+1. Run `supabase/migrations/029_seo_ads.sql`.
+2. Deploy: `supabase functions deploy sitemap --no-verify-jwt` and `supabase functions deploy robots --no-verify-jwt`.
+3. In `vercel.json` and `public/_redirects` replace `YOUR-PROJECT-REF` (sitemap + robots rewrites). The old static `public/robots.txt` was removed; `/robots.txt` is now generated and always lists your sitemap.
+4. Admin → **Search visibility (SEO)**: set the website address, description, share picture, town, then follow the Google Search Console steps (verification code + submit `/sitemap.xml`).
+5. Admin → **Ads**: add adverts, choose where they show (home, news, match, shop, footer), schedule them, set how often and an optional view limit. Admin → **Ad report** shows views and clicks. For a *push* announcement use Admin → Send notifications.
+Every page now sends a canonical link, social preview card and structured data (team, website search, news articles). Private pages are `noindex`.

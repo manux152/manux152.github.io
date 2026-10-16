@@ -8,6 +8,7 @@ import { PredictionBar } from '../../components/PredictionBar';
 import { AvailabilityCard } from '../../components/AvailabilityCard';
 import { Pitch } from '../../components/Pitch';
 import { PageHead } from '../../components/PageHead';
+import { AdSlot } from '../../components/AdSlot';
 import { LiveMatchCard } from '../../components/LiveMatchCard';
 import { MotmCard } from '../../components/MotmCard';
 import { ShareCard } from '../../components/ShareCard';
@@ -89,6 +90,7 @@ export default function MatchDetail() {
           {shareMsg ? <T muted>{shareMsg}</T> : null}
         </Card>) : null}
       <HighlightsCard matchId={x.id} />
+      <AdSlot placement="match" />
       <SponsorStrip placement="match" title="Match partners" />
       {x.report ? <Card><T>{x.report}</T></Card> : null}
       <H>Timeline</H>

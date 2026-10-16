@@ -8,6 +8,7 @@ import { useApp } from '../../lib/app-context';
 import { money } from '../../lib/money';
 import { useLayout } from '../../lib/layout';
 import { PageHead } from '../../components/PageHead';
+import { AdSlot } from '../../components/AdSlot';
 import { colorGroups, productInStock, salePct } from '../../lib/shop';
 
 export default function Shop() {
@@ -26,6 +27,7 @@ export default function Shop() {
   return (
     <Screen><PageHead title="Shop" description="Official club kit and merchandise." /><H>Shop</H><Err msg={error} />
       {settings.spin_enabled !== false && settings.spin_enabled !== 'false' ? <Link href="/spin" asChild><Pressable accessibilityRole="link" accessibilityLabel="Spin the wheel for a chance to win a discount"><Card style={{ borderColor: '#E08A00' }}><T style={{ fontWeight: '800' }}>🎡 Feeling lucky?</T><T muted>Spin the wheel for a chance to win a discount code.</T></Card></Pressable></Link> : null}
+      <AdSlot placement="shop" />
       <Input placeholder="Search the shop" value={q} onChangeText={setQ} />
       <Chips options={(cats.data as any[]).map((c) => ({ value: c.id, label: c.name }))} value={cat} onChange={setCat} />
       <Chips options={[{ value: 'new', label: 'Newest' }, { value: 'low', label: 'Price ↑' }, { value: 'high', label: 'Price ↓' }, { value: 'name', label: 'A–Z' }]} value={sort} onChange={(v) => v && setSort(v)} />

@@ -7,6 +7,10 @@
       "destination": "https://YOUR-PROJECT-REF.supabase.co/functions/v1/sitemap"
     },
     {
+      "source": "/robots.txt",
+      "destination": "https://YOUR-PROJECT-REF.supabase.co/functions/v1/robots"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -69,6 +73,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/admin(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     }

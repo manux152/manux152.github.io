@@ -4,7 +4,7 @@ const GROUPS: Record<string, string[]> = {
   'My area': ['profile', 'orders-me', 'training', 'formations', 'calendar', 'settings-me', 'family-me', 'rotas-me', 'development-me', 'predictor-me', 'invite-me'],
   People: ['users', 'roles', 'registrations', 'codes', 'players', 'staff', 'playerPrivate', 'families', 'consents', 'registrationFields', 'tryouts', 'tryoutFields', 'positions'],
   'Matches & team': ['coach', 'tactics', 'matches', 'opponents', 'competitions', 'apiProviders', 'seasons', 'events', 'eventTypes', 'trainingSessions', 'awards', 'awardTypes', 'attendance', 'live', 'match-report', 'ratings', 'development', 'kit', 'rotas'],
-  Content: ['news', 'media', 'albums', 'announcements', 'pages', 'hero', 'website', 'header-footer', 'sponsors', 'sponsor-report', 'polls', 'video'],
+  Content: ['news', 'media', 'albums', 'announcements', 'pages', 'hero', 'website', 'header-footer', 'sponsors', 'sponsor-report', 'ads', 'ad-report', 'seo', 'seoPages', 'polls', 'video'],
   Shop: ['inventory', 'promotions', 'spin', 'orders', 'payments', 'fees', 'products', 'productCategories', 'paymentProviders'],
   Communication: ['comments', 'referrals', 'assistant', 'chat', 'notifications', 'email-send', 'email-log', 'email-design', 'emailTemplates', 'notificationRules'],
   'Site design': ['branding', 'nav-appearance', 'favicon', 'settings', 'nav'],
