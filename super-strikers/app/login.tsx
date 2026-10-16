@@ -1,0 +1,61 @@
+import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
+import { supabase } from '../lib/supabase';
+import { useApp } from '../lib/app-context';
+import { appUrl } from '../lib/redirect';
+
+export default function Login() {
+  const r = useRouter(); const params = useLocalSearchParams<{ ref?: string }>();
+  const { settings } = useApp();
+  const [mode, setMode] = useState<'in' | 'up'>(typeof params.ref === 'string' && params.ref ? 'up' : 'in');
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
+  const [name, setName] = useState(''); const [code, setCode] = useState('');
+  const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
+  const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const domains: string[] = Array.isArray(settings.allowed_email_domains) ? settings.allowed_email_domains : [];
+
+  const signIn = async () => {
+    setBusy(true); setErr(null);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (error) setErr(error.message); else r.replace('/');
+  };
+  const forgot = async () => {
+    setErr(null); setMsg(null);
+    if (!email.trim()) return setErr('Enter your email above first.');
+    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/reset-password') });
+    setMsg('If an account exists for that email, we\'ve sent a reset link.');
+  };
+  const signUp = async () => {
+    setErr(null); setMsg(null);
+    if (!email.trim() || password.length < 8) return setErr('Enter your email and a password of at least 8 characters.');
+    setBusy(true);
+    const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
+    if (check === 'code') { setBusy(false); return setErr('That team code is not valid, has already been used, has expired, or is for a different email.'); }
+    if (check === 'domain') { setBusy(false); return setErr(`Please use your team email address${domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''}.`); }
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: appUrl('/'), data: { team_code: code.trim(), full_name: name.trim(), referral_code: refCode.trim() } } });
+    setBusy(false);
+    if (error) return setErr(error.message);
+    if (!data.session) { setMsg('Account created. Check your email to confirm it, then sign in.'); setMode('in'); } else r.replace('/');
+  };
+
+  return (
+    <Screen>
+      <H>{mode === 'in' ? 'Sign in' : 'Create your player account'}</H>
+      {mode === 'up' && (
+        <Card><T muted>Player accounts need the team email address{domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''} and a one-time team code from the club.
+          Not on the team yet? Check the Tryouts section.</T></Card>
+      )}
+      {mode === 'up' && <Input label="Full name" value={name} onChangeText={setName} />}
+      <Input label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <Input label="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
+      {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
+      <Err msg={err} />{msg ? <T>{msg}</T> : null}
+      {mode === 'in'
+        ? <><Btn title="Sign in" onPress={signIn} disabled={busy} /><Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} /><Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
+        : <><Btn title="Create account" onPress={signUp} disabled={busy} /><Btn title="Back to sign in" kind="ghost" onPress={() => { setMode('in'); setErr(null); }} /></>}
+    </Screen>
+  );
+}

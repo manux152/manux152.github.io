@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /cart
+Disallow: /pay-return
+Disallow: /reset-password
+Disallow: /profile
+# After deploying, add your own line:  Sitemap: https://YOUR-SITE/sitemap.xml
