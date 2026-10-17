@@ -6,10 +6,10 @@ import { Screen, H, T, Card, Loading, Err, Input, Chips } from '../../components
 import { useTable } from '../../lib/useQuery';
 import { useLayout } from '../../lib/layout';
 import { PageHead } from '../../components/PageHead';
-import { FullImage } from '../../components/FullImage';
-import { Masonry } from '../../components/Masonry';
 
+const GAP = 12;
 export default function Players() {
+  const [w, setW] = useState(0);
   const { cols } = useLayout();
   const [q, setQ] = useState(''); const [pos, setPos] = useState<string | null>(null); const [sort, setSort] = useState<string>('number');
   const positions = useTable('positions', (x) => x.order('sort_order'));
@@ -24,23 +24,29 @@ export default function Players() {
       <Input placeholder="Search players" value={q} onChangeText={setQ} />
       <Chips options={(positions.data as any[]).map((p) => ({ value: p.id, label: p.name }))} value={pos} onChange={setPos} />
       <Chips options={[{ value: 'number', label: 'By number' }, { value: 'name', label: 'A–Z' }, { value: 'height', label: 'Tallest' }]} value={sort} onChange={(v) => v && setSort(v)} />
-      <Masonry items={list} columns={Math.max(1, Math.min(4, cols))} keyOf={(p) => p.id} render={(p) => (
-        <Link href={`/player/${p.id}`} asChild>
-          <Pressable accessibilityRole="link" accessibilityLabel={p.full_name}>
-            <Card style={{ padding: 0, overflow: 'hidden' }}>
-              {p.photo_url ? (
-                <FullImage uri={p.photo_url} alt={p.full_name} radius={0} fallbackRatio={3 / 4}>
-                  {p.shirt_number != null && <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: '#000A', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}><T style={{ color: '#fff', fontWeight: '800' }}>#{p.shirt_number}</T></View>}
-                </FullImage>
-              ) : <View style={{ aspectRatio: 1, backgroundColor: '#E6E8EC', alignItems: 'center', justifyContent: 'center' }}><T muted style={{ fontSize: 40 }}>👤</T>{p.shirt_number != null && <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: '#000A', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}><T style={{ color: '#fff', fontWeight: '800' }}>#{p.shirt_number}</T></View>}</View>}
-              <View style={{ padding: 10, gap: 2 }}>
-                <T style={{ fontWeight: '800' }}>{p.full_name}</T>
-                <T muted style={{ fontSize: 13 }}>{posName(p.position_id)}{p.height_cm ? ` · ${p.height_cm} cm` : ''}{p.preferred_foot ? ` · ${p.preferred_foot} foot` : ''}</T>
-              </View>
-            </Card>
-          </Pressable>
-        </Link>
-      )} />
+      {/* Every tile is exactly the same size: same photo box (3:4, centred on the top so faces stay in view), same text area. The full picture is on the player page. */}
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: '100%' }}>
+        {w > 0 && list.map((p) => {
+          const n = Math.max(1, Math.min(4, cols)); const tile = Math.floor((w - GAP * (n - 1)) / n);
+          const badge = p.shirt_number != null ? <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: '#000A', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}><T style={{ color: '#fff', fontWeight: '800' }}>#{p.shirt_number}</T></View> : null;
+          return (
+            <Link key={p.id} href={`/player/${p.id}`} asChild>
+              <Pressable accessibilityRole="link" accessibilityLabel={p.full_name} style={{ width: tile }}>
+                <Card style={{ padding: 0, overflow: 'hidden', width: tile, height: Math.round(tile * 4 / 3) + 66 }}>
+                  <View style={{ width: tile, height: Math.round(tile * 4 / 3), backgroundColor: '#E6E8EC', alignItems: 'center', justifyContent: 'center' }}>
+                    {p.photo_url ? <Image source={{ uri: p.photo_url }} accessibilityLabel={p.full_name} contentFit="cover" contentPosition="top" transition={120} style={{ width: tile, height: Math.round(tile * 4 / 3) }} /> : <T muted style={{ fontSize: 40 }}>👤</T>}
+                    {badge}
+                  </View>
+                  <View style={{ height: 66, padding: 10, gap: 2, justifyContent: 'center' }}>
+                    <T numberOfLines={1} style={{ fontWeight: '800' }}>{p.full_name}</T>
+                    <T muted numberOfLines={2} style={{ fontSize: 13 }}>{posName(p.position_id)}{p.height_cm ? ` · ${p.height_cm} cm` : ''}{p.preferred_foot ? ` · ${p.preferred_foot} foot` : ''}</T>
+                  </View>
+                </Card>
+              </Pressable>
+            </Link>
+          );
+        })}
+      </View>
       {list.length === 0 && <T muted>No players found.</T>}
       {(staff.data as any[]).length > 0 && <><H>Coaching & management</H>
         {(staff.data as any[]).map((s) => (
