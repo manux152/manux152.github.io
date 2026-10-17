@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, H, T, Card, Btn, Input, Chips, Err, Loading } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
@@ -8,7 +9,7 @@ import { useTable } from '../../lib/useQuery';
 import { useApp } from '../../lib/app-context';
 
 export default function Users() {
-  const { can } = useApp();
+  const { can, session } = useApp();
   const router = useRouter();
   const profiles = useTable('profiles', (q) => q.order('created_at', { ascending: false }));
   const roles = useTable('roles', (q) => q.order('name'));
@@ -28,7 +29,27 @@ export default function Users() {
     for (const role_id of rem) await supabase.from('user_roles').delete().eq('user_id', uid).eq('role_id', role_id);
     await userRoles.refresh();
   };
-  const toggleActive = async (p: any) => { await supabase.from('profiles').update({ is_active: !p.is_active }).eq('id', p.id); await profiles.refresh(); };
+  const ask = (title: string, msg: string, action: string) => new Promise<boolean>((res) => {
+    if (Platform.OS === 'web') return res(window.confirm(`${title}\n\n${msg}`));
+    Alert.alert(title, msg, [{ text: 'Cancel', style: 'cancel', onPress: () => res(false) }, { text: action, style: 'destructive', onPress: () => res(true) }]);
+  });
+  const toggleActive = async (p: any) => {
+    setErr(null);
+    if (p.is_active) {
+      if (p.id === session?.user.id) return setErr('You cannot deactivate your own account here. Ask another user manager.');
+      if (!(await ask('Deactivate this account?', `${p.email} will be signed out everywhere and will not be able to sign in or use anything until you activate the account again.`, 'Deactivate'))) return;
+    }
+    const { error } = await supabase.from('profiles').update({ is_active: !p.is_active }).eq('id', p.id);
+    if (error) setErr(error.message);
+    await profiles.refresh();
+  };
+  const removeUser = async (p: any) => {
+    setErr(null);
+    if (!(await ask('Delete this account?', `This permanently deletes ${p.email}, their roles and player profile, and signs them out everywhere. It cannot be undone.`, 'Delete'))) return;
+    const { data, error } = await supabase.functions.invoke('delete-user', { body: { user_id: p.id } });
+    if (error || data?.error) return setErr(data?.error ?? error?.message ?? 'Could not delete the account');
+    await profiles.refresh(); await userRoles.refresh(); setOpen(null);
+  };
   const create = async () => {
     setErr(null);
     if (!checkPassword(form!.password).valid) return setErr(PASSWORD_ERROR);
@@ -50,6 +71,7 @@ export default function Users() {
 
   return (
     <Screen><H>Users</H>
+      <Err msg={err} />
       <Btn title="+ Create account" onPress={() => setForm({ email: '', password: '', full_name: '', roles: [] })} />
       {(profiles.data as any[]).map((p) => (
         <Card key={p.id}>
@@ -59,6 +81,7 @@ export default function Users() {
             <Chips multi options={roleOpts} value={rolesOf(p.id)} onChange={(v) => setRoles(p.id, v)} />
             {can('emails.manage') && <Btn title="Send email" kind="ghost" onPress={() => router.push(`/admin/email-send?user=${p.id}` as any)} />}
             <Btn title={p.is_active ? 'Deactivate' : 'Activate'} kind="ghost" onPress={() => toggleActive(p)} />
+            {p.id !== session?.user.id && <Btn title="Delete account" kind="danger" onPress={() => removeUser(p)} />}
           </>)}
         </Card>
       ))}

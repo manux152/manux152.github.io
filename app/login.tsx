@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
-import { supabase } from '../lib/supabase';
+import { supabase, REVOKED_KEY } from '../lib/supabase';
 import { useApp } from '../lib/app-context';
 import { appUrl } from '../lib/redirect';
 import { PasswordChecklist } from '../components/PasswordChecklist';
 import { checkPassword, PASSWORD_ERROR } from '../lib/password';
+
+const REVOKED_MSG = 'This account has been deactivated or deleted, so you have been signed out. Contact the club if you think this is a mistake.';
 
 export default function Login() {
   const r = useRouter(); const params = useLocalSearchParams<{ ref?: string }>();
@@ -18,11 +21,12 @@ export default function Login() {
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const domains: string[] = Array.isArray(settings.allowed_email_domains) ? settings.allowed_email_domains : [];
 
+  useEffect(() => { AsyncStorage.getItem(REVOKED_KEY).then((v) => { if (v) { AsyncStorage.removeItem(REVOKED_KEY); setErr(REVOKED_MSG); } }).catch(() => {}); }, []);
   const signIn = async () => {
     setBusy(true); setErr(null);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (error) { setErr(error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); } else r.replace('/');
+    if (error) { setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); } else r.replace('/');
   };
   const forgot = async () => {
     setErr(null); setMsg(null);

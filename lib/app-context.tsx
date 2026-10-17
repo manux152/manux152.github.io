@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase, endRevokedSession } from './supabase';
 import { clearOfflineCache } from './offline';
 import { onPullRefresh } from './refresh';
 
@@ -34,7 +34,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const loadPerms = useCallback(async (s: Session | null) => {
     if (!s) { setProfile(null); return setPermissions([]); }
-    const { data: pr } = await supabase.from('profiles').select('is_active,full_name,avatar_url').eq('id', s.user.id).maybeSingle();
+    const { data: pr, error: prErr } = await supabase.from('profiles').select('is_active,full_name,avatar_url').eq('id', s.user.id).maybeSingle();
+    // Deactivated or deleted: end the session and clear everything (the profile row is gone for deleted accounts)
+    if (/account_inactive/.test(prErr?.message ?? '') || pr?.is_active === false || (!pr && !prErr)) { setProfile(null); setPermissions([]); endRevokedSession(); return; }
     setProfile(pr ? { full_name: pr.full_name ?? null, avatar_url: pr.avatar_url ?? null } : null);
     if (pr && pr.is_active === false) return setPermissions([]);
     const { data: ur } = await supabase.from('user_roles').select('role_id').eq('user_id', s.user.id);

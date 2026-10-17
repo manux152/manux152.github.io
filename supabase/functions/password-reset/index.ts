@@ -27,6 +27,8 @@ Deno.serve(async (req) => {
   const { data: link, error: lerr } = await admin.auth.admin.generateLink({ type: 'recovery', email });
   // Unknown address: answer exactly like success so nobody can probe which emails have accounts.
   if (lerr || !link?.properties?.hashed_token) return json({ ok: true });
+  // Deactivated accounts cannot get back in through a reset link either (same answer, so nothing is revealed)
+  if (link.user?.id) { const { data: pr } = await admin.from('profiles').select('is_active').eq('id', link.user.id).maybeSingle(); if (pr?.is_active === false) return json({ ok: true }); }
 
   const { data: tpl } = await admin.from('email_templates').select('*').eq('event_key', 'password_reset').maybeSingle();
   if (!tpl) return json({ error: 'The “Password reset” email template is missing. Run migration 008_emails.sql.' }, 500);

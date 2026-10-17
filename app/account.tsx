@@ -27,6 +27,15 @@ export default function Account() {
     if (v) { const res = await enablePush(session.user.id); setOn(res.ok); setMsg(res.message); }
     else { await disablePush(session.user.id); setOn(false); setMsg('Notifications are off.'); }
   };
+  const deactivate = async () => {
+    setErr(null);
+    const ok = Platform.OS === 'web' ? window.confirm(`${translate('Deactivate your account?')}\n\n${translate('You will be signed out everywhere and cannot sign in again until the club reactivates your account. Nothing is deleted.')}`)
+      : await new Promise<boolean>((res) => Alert.alert(translate('Deactivate your account?'), translate('You will be signed out everywhere and cannot sign in again until the club reactivates your account. Nothing is deleted.'), [{ text: translate('Cancel'), style: 'cancel', onPress: () => res(false) }, { text: translate('Deactivate'), style: 'destructive', onPress: () => res(true) }]));
+    if (!ok) return;
+    const { data, error } = await supabase.functions.invoke('deactivate-account');
+    if (error || data?.error) return setErr(data?.error ?? error?.message ?? 'Could not deactivate the account');
+    await signOut(); r.replace('/');
+  };
   const del = async () => {
     setErr(null);
     if (!(await confirmAsk('Delete your account?', 'This permanently removes your account, registration and player profile. It cannot be undone.'))) return;
@@ -61,6 +70,7 @@ export default function Account() {
       {(pages.data as any[]).map((p) => <Btn key={p.id} title={p.title} kind="ghost" onPress={() => r.push(`/page/${p.slug}` as any)} />)}
       <Btn title="Sign out" kind="ghost" onPress={async () => { await signOut(); r.replace('/'); }} />
       <Err msg={err} />
+      <Btn title="Deactivate my account" kind="ghost" onPress={deactivate} />
       <Btn title="Delete my account" kind="danger" onPress={del} />
     </Screen>
   );
