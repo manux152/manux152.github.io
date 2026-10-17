@@ -304,3 +304,10 @@ Search-engine crawlers are not shown the gate, so public pages stay indexable. T
 Run `supabase/migrations/031_consent_expiry.sql` in the Supabase SQL editor. Then **Admin → Legal documents → How often people are asked again**:
 - *Cookie choices* (default 3 days): a device keeps its saved choice and is only asked again after it has been unused for this many days (0 = every visit).
 - *Terms and Privacy re-accept* (default 90 days): after this long, every account sees the review screen again and the new acceptance is stored as a fresh dated evidence record (0 = only when a new version is published).
+
+## Automatic emails (phase 40)
+Run `supabase/migrations/033_email_triggers.sql` once. Emails sent automatically: welcome, confirm email, password reset/changed, account deactivated/reactivated/deleted,
+role assigned, registration received/approved/rejected, tryout received/shortlisted/declined, team code, order received/status, availability, lineup,
+news published, new fixture, full-time result and training sessions. Edit or switch off any of them in Admin → Emails. Team-wide ones skip people who opted out.
+Delivery needs the `send-email` function, the `RESEND_API_KEY` secret and the **Database Webhook** on table `email_queue` (INSERT → `send-email`).
+Check delivery in the SQL editor: `select template_key, to_email, status, error from email_queue order by created_at desc limit 20;`
