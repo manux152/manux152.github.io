@@ -14,7 +14,7 @@ import { useLegalStatus } from '../lib/legal';
  * It returns each time a new version is published.
  */
 export function LegalGate({ children }: { children: React.ReactNode }) {
-  const { status, docs, accept, error } = useLegalStatus();
+  const { status, docs, accept, error, renewal } = useLegalStatus();
   const { settings } = useApp(); const { colors, fs } = useTheme();
   const [tab, setTab] = useState(0);
   const [opened, setOpened] = useState<Record<string, Set<number>>>({});
@@ -39,7 +39,7 @@ export function LegalGate({ children }: { children: React.ReactNode }) {
           <Logo height={56} showName nameColor={colors.heading} />
           <Text accessibilityRole="header" style={{ color: colors.heading, fontSize: fs(24), fontWeight: '800', textAlign: 'center' }}>Before you continue</Text>
           <Text style={{ color: colors.muted, fontSize: fs(14), textAlign: 'center', lineHeight: fs(21) }}>
-            Please read our Terms of Use and Privacy Policy. Open each section, then confirm below. Your acceptance is recorded with the date, time and version.
+            {renewal ? 'It has been a while since you last confirmed these. Please read our Terms of Use and Privacy Policy again, open each section, then confirm below.' : 'Please read our Terms of Use and Privacy Policy. Open each section, then confirm below.'} Your acceptance is recorded with the date, time and version.
           </Text>
         </View>
 

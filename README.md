@@ -299,3 +299,8 @@ Every page now sends a canonical link, social preview card and structured data (
 4. Cookie choices appear on every visit (Strictly necessary always on; Preferences, Analytics, Marketing optional) and are logged in `cookie_consents`. Analytics, ad/sponsor counting and remembered language/theme only run when allowed. "Cookie settings" is in the footer and Settings.
 5. Admin → **Acceptance & consent records**: view and export the evidence (read-only, cannot be edited).
 Search-engine crawlers are not shown the gate, so public pages stay indexable. To ask for cookie choices only once instead of every visit, set `consent_every_visit` to false in `site_settings`.
+
+## Phase 32 — remembered cookie choices and periodic re-acceptance
+Run `supabase/migrations/031_consent_expiry.sql` in the Supabase SQL editor. Then **Admin → Legal documents → How often people are asked again**:
+- *Cookie choices* (default 3 days): a device keeps its saved choice and is only asked again after it has been unused for this many days (0 = every visit).
+- *Terms and Privacy re-accept* (default 90 days): after this long, every account sees the review screen again and the new acceptance is stored as a fresh dated evidence record (0 = only when a new version is published).

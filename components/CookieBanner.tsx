@@ -5,7 +5,7 @@ import { TrText as Text } from './TrText';
 import { Btn } from './ui';
 import { useApp } from '../lib/app-context';
 import { useTheme } from '../lib/theme';
-import { acceptAll, closeCookieSettings, isCrawler, rejectOptional, saveConsent, useConsent, type Choice } from '../lib/consent';
+import { acceptAll, closeCookieSettings, isCrawler, rejectOptional, saveConsent, setReaskDays, useConsent, type Choice } from '../lib/consent';
 
 const CATS: { key: keyof Choice | 'necessary'; title: string; text: string }[] = [
   { key: 'necessary', title: 'Strictly necessary', text: 'Keep you signed in, hold your cart and remember these choices. The Service cannot work without them.' },
@@ -14,16 +14,18 @@ const CATS: { key: keyof Choice | 'necessary'; title: string; text: string }[] =
   { key: 'marketing', title: 'Marketing', text: 'Would allow third-party advertising tools. None are used today; if added, they only run with your permission.' },
 ];
 
-/** Cookie choices. Shown on every visit (Admin can change this) and any time from "Cookie settings". Optional cookies stay off until chosen. */
+/** Cookie choices. Remembered per device; asked again only after the device has been away for the period set in Admin (default 3 days). Always reachable from "Cookie settings". */
 export function CookieBanner() {
-  const { loaded, saved, decidedThisVisit, panelOpen } = useConsent();
+  const { loaded, saved, decidedThisVisit, panelOpen, lapsed } = useConsent();
   const { settings } = useApp(); const { colors, fs, isDark } = useTheme(); const router = useRouter();
   const [manage, setManage] = useState(false);
   const [c, setC] = useState<Choice>({ preferences: false, analytics: false, marketing: false });
   useEffect(() => { if (saved) setC({ preferences: saved.preferences, analytics: saved.analytics, marketing: saved.marketing }); }, [saved?.at]);   // eslint-disable-line
   useEffect(() => { if (panelOpen) setManage(true); }, [panelOpen]);
-  const every = settings.consent_every_visit !== false && settings.consent_every_visit !== 'false';
-  const visible = loaded && !isCrawler() && (panelOpen || (!decidedThisVisit && (every || !saved)));
+  const days = settings.consent_reask_days == null ? 3 : Number(settings.consent_reask_days);
+  useEffect(() => { setReaskDays(days); }, [days]);
+  // Shown to new devices, and again only when this device has not been used for the number of days set in Admin.
+  const visible = loaded && !isCrawler() && (panelOpen || (!decidedThisVisit && (!saved || lapsed)));
   if (!visible) return null;
   const color = settings.primary_color ?? '#0B6E4F';
   const read = (slug: string) => { closeCookieSettings(); router.push(`/legal/${slug}` as any); };

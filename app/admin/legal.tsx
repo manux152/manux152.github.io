@@ -13,6 +13,8 @@ export default function LegalAdmin() {
   const [title, setTitle] = useState(''); const [summary, setSummary] = useState(''); const [secs, setSecs] = useState<Section[]>([]);
   const [history, setHistory] = useState<{ version: number; published_at: string }[]>([]);
   const [email, setEmail] = useState(typeof settings.legal_contact_email === 'string' ? settings.legal_contact_email : '');
+  const num = (v: unknown, d: number) => (v == null || v === '' || !Number.isFinite(Number(v)) ? String(d) : String(Number(v)));
+  const [cookieDays, setCookieDays] = useState(num(settings.consent_reask_days, 3)); const [reDays, setReDays] = useState(num(settings.legal_reaccept_days, 90));
   const [loading, setLoading] = useState(true); const [confirm, setConfirm] = useState(false); const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null);
 
@@ -33,6 +35,14 @@ export default function LegalAdmin() {
     const { error } = await supabase.from('site_settings').upsert({ key: 'legal_contact_email', value: e }, { onConflict: 'key' });
     if (error) return setErr(error.message); await reload(); setMsg('Contact email saved. It appears wherever the documents say {{email}}.');
   };
+  const saveReminders = async () => {
+    setErr(null); setMsg(null);
+    const c = Number(cookieDays), r = Number(reDays);
+    if (!Number.isInteger(c) || c < 0 || c > 365) return setErr('Cookie reminder: enter a whole number of days from 0 to 365.');
+    if (!Number.isInteger(r) || r < 0 || r > 3650) return setErr('Terms and Privacy re-acceptance: enter a whole number of days from 0 to 3650.');
+    const { error } = await supabase.from('site_settings').upsert([{ key: 'consent_reask_days', value: c }, { key: 'legal_reaccept_days', value: r }], { onConflict: 'key' });
+    if (error) return setErr(error.message); await reload(); setMsg('Saved. The new periods apply the next time people open the app or website.');
+  };
   const publish = async () => {
     setErr(null); setMsg(null);
     if (secs.some((s) => !s.heading.trim() || !s.body.trim())) { setConfirm(false); return setErr('Every section needs a heading and text. Remove empty sections.'); }
@@ -51,6 +61,14 @@ export default function LegalAdmin() {
         <T style={{ fontWeight: '800' }}>Contact email shown in the documents</T>
         <Input label="Email (replaces {{email}})" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <Btn title="Save email" kind="ghost" onPress={saveEmail} />
+      </Card>
+      <Card>
+        <T style={{ fontWeight: '800' }}>How often people are asked again</T>
+        <Input label="Cookie choices: ask again after the device has been away for (days). 0 = every visit" value={cookieDays} onChangeText={setCookieDays} keyboardType="numeric" />
+        <T muted>A device that visited recently keeps its saved cookie choice and is not asked again. Every visit resets the clock. Default 3.</T>
+        <Input label="Terms of Use and Privacy Policy: every account re-accepts after (days). 0 = only when a new version is published" value={reDays} onChangeText={setReDays} keyboardType="numeric" />
+        <T muted>When the time is up, the next visit shows the review screen again and the new acceptance is saved as a fresh dated record. Default 90.</T>
+        <Btn title="Save these periods" kind="ghost" onPress={saveReminders} />
       </Card>
       <Chips options={DOCS} value={slug} onChange={(v) => v && setSlug(v as Slug)} />
       {loading ? <Loading /> : <>
