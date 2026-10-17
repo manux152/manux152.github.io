@@ -29,6 +29,9 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Single-page app fixes for GitHub Pages
         run: |
+          # Google Search Console verification tag (the single-page web build has no custom head template)
+          grep -q 'google-site-verification' dist/index.html || sed -i 's#</head>#<meta name="google-site-verification" content="g7bWAX-1LnhZAScPKDpnPEZ8YFqJTOvdu6ZiQixy2g8" /></head>#' dist/index.html
+          grep -c 'google-site-verification' dist/index.html
           cp dist/index.html dist/404.html   # deep links like /match/123 load the app
           touch dist/.nojekyll               # lets the _expo folder be served
       - name: Sitemap and robots.txt (GitHub Pages cannot rewrite URLs, so we save them as files)
