@@ -12,6 +12,7 @@ export default function Login() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [name, setName] = useState(''); const [code, setCode] = useState('');
   const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
+  const [needsConfirm, setNeedsConfirm] = useState(false);
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const domains: string[] = Array.isArray(settings.allowed_email_domains) ? settings.allowed_email_domains : [];
 
@@ -19,7 +20,7 @@ export default function Login() {
     setBusy(true); setErr(null);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (error) setErr(error.message); else r.replace('/');
+    if (error) { setErr(error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); } else r.replace('/');
   };
   const forgot = async () => {
     setErr(null); setMsg(null);
@@ -31,6 +32,15 @@ export default function Login() {
     if (error) return setErr(error.message);
     setMsg('If an account exists for that email, we\'ve sent a reset link. Check your spam folder too.');
   };
+  const resendConfirm = async () => {
+    setErr(null); setMsg(null);
+    if (!email.trim()) return setErr('Enter your email above first.');
+    setBusy(true);
+    const { error } = await supabase.functions.invoke('signup', { body: { action: 'resend', email: email.trim() } });
+    setBusy(false);
+    if (error) return setErr(error.message);
+    setMsg('If that account still needs confirming, we\'ve sent a new link. Use the newest email.');
+  };
   const signUp = async () => {
     setErr(null); setMsg(null);
     if (!email.trim() || password.length < 8) return setErr('Enter your email and a password of at least 8 characters.');
@@ -38,10 +48,11 @@ export default function Login() {
     const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
     if (check === 'code') { setBusy(false); return setErr('That team code is not valid, has already been used, has expired, or is for a different email.'); }
     if (check === 'domain') { setBusy(false); return setErr(`Please use your team email address${domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''}.`); }
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: appUrl('/'), data: { team_code: code.trim(), full_name: name.trim(), referral_code: refCode.trim() } } });
+    // Created by our own function so the confirmation email always uses the club's template.
+    const { error } = await supabase.functions.invoke('signup', { body: { email: email.trim(), password, full_name: name.trim(), team_code: code.trim(), referral_code: refCode.trim() } });
     setBusy(false);
     if (error) return setErr(error.message);
-    if (!data.session) { setMsg('Account created. Check your email to confirm it, then sign in.'); setMode('in'); } else r.replace('/');
+    setMsg('Account created. We\'ve emailed you a confirmation link. Open it, then sign in. Check your spam folder too.'); setMode('in'); setNeedsConfirm(true);
   };
 
   return (
@@ -58,7 +69,7 @@ export default function Login() {
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}
       {mode === 'in'
-        ? <><Btn title="Sign in" onPress={signIn} disabled={busy} /><Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} /><Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
+        ? <><Btn title="Sign in" onPress={signIn} disabled={busy} /><Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
         : <><Btn title="Create account" onPress={signUp} disabled={busy} /><Btn title="Back to sign in" kind="ghost" onPress={() => { setMode('in'); setErr(null); }} /></>}
     </Screen>
   );

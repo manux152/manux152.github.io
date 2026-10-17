@@ -54,6 +54,7 @@ function Inner() {
         <Stack.Screen name="product/[slug]" options={{ title: t('Product') }} />
         <Stack.Screen name="cart" options={{ title: t('Cart') }} />
         <Stack.Screen name="orders" options={{ title: t('My orders') }} />
+        <Stack.Screen name="confirm-email" options={{ title: t('Confirm email') }} />
         <Stack.Screen name="reset-password" options={{ title: t('New password') }} />
         <Stack.Screen name="tryout/[id]" options={{ title: t('Tryout') }} />
         <Stack.Screen name="page/[slug]" options={{ title: t('Info') }} />
