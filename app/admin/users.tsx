@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Screen, H, T, Card, Btn, Input, Chips, Err, Loading } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { PasswordChecklist } from '../../components/PasswordChecklist';
+import { checkPassword, PASSWORD_ERROR } from '../../lib/password';
 import { useTable } from '../../lib/useQuery';
 import { useApp } from '../../lib/app-context';
 
@@ -29,6 +31,7 @@ export default function Users() {
   const toggleActive = async (p: any) => { await supabase.from('profiles').update({ is_active: !p.is_active }).eq('id', p.id); await profiles.refresh(); };
   const create = async () => {
     setErr(null);
+    if (!checkPassword(form!.password).valid) return setErr(PASSWORD_ERROR);
     const { data, error } = await supabase.functions.invoke('create-user', { body: { ...form, role_ids: form!.roles } });
     if (error || data?.error) return setErr(error?.message ?? data.error);
     setForm(null); await profiles.refresh(); await userRoles.refresh();
@@ -38,7 +41,8 @@ export default function Users() {
     <Screen><H>Create account</H>
       <Input label="Full name" value={form.full_name} onChangeText={(v) => setForm({ ...form, full_name: v })} />
       <Input label="Email" autoCapitalize="none" value={form.email} onChangeText={(v) => setForm({ ...form, email: v })} />
-      <Input label="Temporary password (min 8 chars)" secureTextEntry value={form.password} onChangeText={(v) => setForm({ ...form, password: v })} />
+      <Input label="Temporary password" secureTextEntry value={form.password} onChangeText={(v) => setForm({ ...form, password: v })} />
+      <PasswordChecklist password={form.password} />
       <T muted>Roles</T><Chips multi options={roleOpts} value={form.roles} onChange={(v) => setForm({ ...form, roles: v })} />
       <Err msg={err} /><Btn title="Create" onPress={create} /><Btn title="Cancel" kind="ghost" onPress={() => setForm(null)} />
     </Screen>

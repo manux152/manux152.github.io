@@ -4,6 +4,8 @@ import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
 import { supabase } from '../lib/supabase';
 import { useApp } from '../lib/app-context';
 import { appUrl } from '../lib/redirect';
+import { PasswordChecklist } from '../components/PasswordChecklist';
+import { checkPassword, PASSWORD_ERROR } from '../lib/password';
 
 export default function Login() {
   const r = useRouter(); const params = useLocalSearchParams<{ ref?: string }>();
@@ -43,7 +45,8 @@ export default function Login() {
   };
   const signUp = async () => {
     setErr(null); setMsg(null);
-    if (!email.trim() || password.length < 8) return setErr('Enter your email and a password of at least 8 characters.');
+    if (!email.trim() || !password) return setErr('Enter your email and a password.');
+    if (!checkPassword(password).valid) return setErr(PASSWORD_ERROR);
     setBusy(true);
     const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
     if (check === 'code') { setBusy(false); return setErr('That team code is not valid, has already been used, has expired, or is for a different email.'); }
@@ -65,6 +68,7 @@ export default function Login() {
       {mode === 'up' && <Input label="Full name" value={name} onChangeText={setName} />}
       <Input label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
       <Input label="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      {mode === 'up' && <PasswordChecklist password={password} />}
       {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}

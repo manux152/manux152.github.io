@@ -1,6 +1,7 @@
 // Deploy: supabase functions deploy create-user
 // Creates an account with a temporary password and assigns roles. Caller must hold 'users.manage'.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { passwordOk, PASSWORD_ERROR } from '../_shared/password.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -13,7 +14,8 @@ Deno.serve(async (req) => {
   if (!allowed) return json({ error: 'Forbidden' }, 403);
 
   const { email, password, full_name, role_ids } = await req.json();
-  if (!email || !password || password.length < 8) return json({ error: 'Email and a password of 8+ characters are required' }, 400);
+  if (!email || !password) return json({ error: 'Email and a password are required' }, 400);
+  if (!passwordOk(String(password))) return json({ error: PASSWORD_ERROR }, 400);
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   // Admin-created accounts pass through the sign-up rules with a short-lived, email-locked, role-less code

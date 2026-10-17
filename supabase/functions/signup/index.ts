@@ -2,6 +2,7 @@
 // so sign-up works without Supabase's limited built-in email sender. Also re-sends the confirmation link.
 // Deploy:  supabase functions deploy signup --no-verify-jwt
 // Needs:   RESEND_API_KEY secret, sender address in Admin → Email design, public address in Admin → Website (site_url).
+import { passwordOk, PASSWORD_ERROR } from '../_shared/password.ts';
 import { adminClient, commonVars, loadContext, logEmails, renderEmail, sendOne } from '../_shared/email.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
@@ -51,7 +52,7 @@ Deno.serve(async (req) => {
 
   // ── New account
   const password = String(b.password ?? '');
-  if (password.length < 8) return json({ error: 'Choose a password of at least 8 characters.' }, 400);
+  if (!passwordOk(password)) return json({ error: PASSWORD_ERROR }, 400);
   const full_name = clean(b.full_name, 120), team_code = clean(b.team_code, 40), referral_code = clean(b.referral_code, 20);
 
   const { data: check } = await admin.rpc('check_signup', { p_email: email, p_code: team_code });

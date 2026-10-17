@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { Screen, H, T, Input, Btn, Err } from '../components/ui';
 import { supabase } from '../lib/supabase';
+import { PasswordChecklist } from '../components/PasswordChecklist';
+import { checkPassword, PASSWORD_ERROR } from '../lib/password';
 
 // One-time links must only be redeemed once, even if the screen remounts. Results are remembered per link.
 const redeemed = new Map<string, Promise<{ ok: boolean; msg?: string }>>();
@@ -85,7 +87,7 @@ export default function ResetPassword() {
 
   const save = async () => {
     setErr(null);
-    if (pw.length < 8) return setErr('Use at least 8 characters.');
+    if (!checkPassword(pw).valid) return setErr(PASSWORD_ERROR);
     if (pw !== pw2) return setErr('The two passwords do not match.');
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
@@ -109,7 +111,9 @@ export default function ResetPassword() {
         </>
       ) : (<>
         <Input label="New password" secureTextEntry value={pw} onChangeText={setPw} />
+        <PasswordChecklist password={pw} />
         <Input label="Repeat new password" secureTextEntry value={pw2} onChangeText={setPw2} />
+        {pw2 ? <T style={{ fontSize: 13, color: pw === pw2 ? '#1B7F3B' : '#B3261E', fontWeight: '700' }}>{pw === pw2 ? '✓ Passwords match' : '✗ Passwords do not match'}</T> : null}
         <Btn title="Save password" onPress={save} disabled={busy} />
       </>)}
       <Err msg={err} />
