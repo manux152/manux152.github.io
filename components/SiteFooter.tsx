@@ -7,6 +7,7 @@ import { useTheme } from '../lib/theme';
 import { Logo, safeUrl } from './Logo';
 import { SponsorSlider } from './SponsorSlider';
 import { AdSlot } from './AdSlot';
+import { openCookieSettings } from '../lib/consent';
 
 const safe = (u?: string | null) => (u && /^(https?:\/\/|mailto:|tel:)/i.test(u) ? u : null);
 const SOCIAL_ICON: Record<string, string> = { instagram: '📸', facebook: '👍', twitter: '🐦', x: '✖', youtube: '▶', tiktok: '🎵', whatsapp: '💬', linkedin: '💼' };
@@ -89,6 +90,10 @@ export function SiteFooter() {
             </View>)}
           <View style={{ borderTopWidth: 1, borderTopColor: colors.footerBorder, paddingTop: 16, flexDirection: narrow ? 'column' : 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, paddingBottom: narrow ? 16 : 0 }}>
             <Text style={{ flexShrink: 1, color: colors.footerMuted, fontSize: fs(12) }}>{settings.footer_copyright || `© ${new Date().getFullYear()} ${settings.team_name}. All rights reserved.`}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
+              {[['Terms of Use', '/legal/terms'], ['Privacy Policy', '/legal/privacy'], ['Cookie Policy', '/legal/cookies']].map(([l, h]) => <Pressable key={h} accessibilityRole="link" onPress={go(h)}><Text style={{ color: colors.footerMuted, fontSize: fs(12), textDecorationLine: 'underline' }}>{l}</Text></Pressable>)}
+              <Pressable accessibilityRole="button" onPress={openCookieSettings}><Text style={{ color: colors.footerMuted, fontSize: fs(12), textDecorationLine: 'underline' }}>Cookie settings</Text></Pressable>
+            </View>
             <Pressable accessibilityRole="link" onPress={go('/settings')}><Text style={{ color: colors.footerMuted, fontSize: fs(12), textDecorationLine: 'underline' }}>Accessibility & display settings</Text></Pressable>
           </View>
         </View>

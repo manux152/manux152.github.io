@@ -18,6 +18,8 @@ import { I18nProvider, useI18n } from '../lib/i18n';
 import { usePageViews } from '../lib/analytics';
 import { PwaSetup } from '../components/PwaSetup';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { LegalGate } from '../components/LegalGate';
+import { CookieBanner } from '../components/CookieBanner';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -30,7 +32,7 @@ function Inner() {
   usePageViews();
   if (!ready) return <Loading />;
   return (
-    <>
+    <LegalGate>
       <Favicon />
       <PwaSetup />
       <OfflineBanner />
@@ -55,6 +57,7 @@ function Inner() {
         <Stack.Screen name="reset-password" options={{ title: t('New password') }} />
         <Stack.Screen name="tryout/[id]" options={{ title: t('Tryout') }} />
         <Stack.Screen name="page/[slug]" options={{ title: t('Info') }} />
+        <Stack.Screen name="legal/[slug]" options={{ title: t('Legal') }} />
         <Stack.Screen name="account" options={{ title: t('Account') }} />
         <Stack.Screen name="dashboard" options={{ title: t('My dashboard') }} />
         <Stack.Screen name="settings" options={{ title: t('Settings & accessibility') }} />
@@ -69,7 +72,8 @@ function Inner() {
       </Stack>
       <AssistantFab />
       <CallOverlay />
-    </>
+      <CookieBanner />
+    </LegalGate>
   );
 }
 function SetupNeeded() {

@@ -289,3 +289,11 @@ To improve a translation: edit `lib/i18nStrings.ts` (wins over automatic ones) o
 4. Admin → **Search visibility (SEO)**: set the website address, description, share picture, town, then follow the Google Search Console steps (verification code + submit `/sitemap.xml`).
 5. Admin → **Ads**: add adverts, choose where they show (home, news, match, shop, footer), schedule them, set how often and an optional view limit. Admin → **Ad report** shows views and clicks. For a *push* announcement use Admin → Send notifications.
 Every page now sends a canonical link, social preview card and structured data (team, website search, news articles). Private pages are `noindex`.
+
+## Phase 31 (legal acceptance + cookie consent)
+1. Run `supabase/migrations/030_legal_consent.sql` BEFORE deploying the new app (it also installs starting Terms, Privacy and Cookie texts).
+2. Admin → **Legal documents**: set the contact email, read through the template and publish your own reviewed version.
+3. Every new visitor and every new version: the Terms and Privacy Policy must be opened section by section and ticked before the app is usable. Acceptance is stored in `legal_acceptances` (version, text fingerprint, time, device, signed-in account).
+4. Cookie choices appear on every visit (Strictly necessary always on; Preferences, Analytics, Marketing optional) and are logged in `cookie_consents`. Analytics, ad/sponsor counting and remembered language/theme only run when allowed. "Cookie settings" is in the footer and Settings.
+5. Admin → **Acceptance & consent records**: view and export the evidence (read-only, cannot be edited).
+Search-engine crawlers are not shown the gate, so public pages stay indexable. To ask for cookie choices only once instead of every visit, set `consent_every_visit` to false in `site_settings`.

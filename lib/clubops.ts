@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from './supabase';
+import { hasConsent } from './consent';
 
 export type FamilyMember = { player_id: string; name: string; photo_url: string | null; self: boolean; relationship: string; requires_guardian: boolean };
 export const fetchFamily = async (): Promise<FamilyMember[]> => { const { data } = await supabase.rpc('my_family'); return (data ?? []) as FamilyMember[]; };
@@ -46,6 +47,7 @@ export function useRotas() {
 export type Placement = 'footer' | 'home' | 'match';
 const seen = new Set<string>();      // count each sponsor + place once per visit, so refreshing the page does not inflate views
 export function trackSponsor(id: string, placement: Placement, kind: 'view' | 'click') {
+  if (!hasConsent('analytics')) return;       // counted only when the person allowed analytics
   const key = `${id}:${placement}:${kind}`;
   if (kind === 'view') { if (seen.has(key)) return; seen.add(key); }
   supabase.rpc('sponsor_track', { p_sponsor: id, p_placement: placement, p_kind: kind }).then(() => {}, () => {});

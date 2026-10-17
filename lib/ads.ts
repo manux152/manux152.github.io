@@ -1,10 +1,12 @@
 import { supabase } from './supabase';
+import { hasConsent } from './consent';
 
 export type AdPlacement = 'home' | 'news' | 'match' | 'shop' | 'footer';
 export type Ad = { id: string; headline: string | null; body: string | null; image_url: string | null; link_url: string | null; cta_label: string | null; advertiser: string | null; weight: number };
 
 const seen = new Set<string>();      // count each ad + place once per visit, so refreshing does not inflate views
 export function trackAd(id: string, placement: AdPlacement, kind: 'view' | 'click') {
+  if (!hasConsent('analytics')) return;       // counted only when the person allowed analytics
   const key = `${id}:${placement}:${kind}`;
   if (kind === 'view') { if (seen.has(key)) return; seen.add(key); }
   supabase.rpc('ad_track', { p_ad: id, p_placement: placement, p_kind: kind }).then(() => {}, () => {});

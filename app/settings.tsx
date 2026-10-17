@@ -9,6 +9,7 @@ import { useApp } from '../lib/app-context';
 import { supabase } from '../lib/supabase';
 import { LANGS, useI18n } from '../lib/i18n';
 import { isOptedOut, setOptedOut } from '../lib/analytics';
+import { openCookieSettings } from '../lib/consent';
 
 // Display, accessibility and privacy options. Display/accessibility choices are saved on this device and apply across the whole app.
 export default function Settings() {
@@ -36,6 +37,12 @@ export default function Settings() {
         <T style={{ fontWeight: '800' }}>Language</T>
         <T muted>Choose the language of menus and buttons. News and club messages stay in the language they were written in.</T>
         <Chips options={LANGS} value={lang} onChange={(v) => v && setLang(v)} />
+      </Card>
+      <Card>
+        <T style={{ fontWeight: '800' }}>Cookies & legal</T>
+        <Btn title="Cookie settings" kind="ghost" onPress={openCookieSettings} />
+        <Btn title="Terms of Use" kind="ghost" onPress={() => router.push('/legal/terms' as any)} />
+        <Btn title="Privacy Policy" kind="ghost" onPress={() => router.push('/legal/privacy' as any)} />
       </Card>
       {settings.analytics_enabled !== false ? <Card>
         <Toggle label="Share anonymous usage statistics" hint="Counts which pages are used, never who you are. Helps the club improve the app." value={stats} onChange={(v) => { setStats(v); setOptedOut(!v); }} />

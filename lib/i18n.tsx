@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from './app-context';
 import { supabase } from './supabase';
+import { hasConsent } from './consent';
 import { DICT, LANGS, type Lang } from './i18nStrings';
 import { setLangState } from './langState';
 
@@ -38,7 +39,7 @@ function persist(lang: Lang) {
   persistTimer = setTimeout(() => {
     const m = RT[lang] ?? {}; const keys = Object.keys(m);
     const keep = keys.length > 3000 ? Object.fromEntries(keys.slice(-3000).map((k) => [k, m[k]])) : m;
-    AsyncStorage.setItem('tr:v1:' + lang, JSON.stringify(keep)).catch(() => {});
+    if (hasConsent('preferences')) AsyncStorage.setItem('tr:v1:' + lang, JSON.stringify(keep)).catch(() => {});
   }, 1500);
 }
 async function flush() {
@@ -97,7 +98,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (Platform.OS === 'web') (globalThis as any).document?.documentElement?.setAttribute('lang', lang); }, [lang]);
   const uid = session?.user.id;
   const setLang = useCallback((l: Lang) => {
-    setStored(l); AsyncStorage.setItem('lang', l).catch(() => {});
+    setStored(l); if (hasConsent('preferences')) AsyncStorage.setItem('lang', l).catch(() => {});
     if (uid) supabase.from('profiles').update({ language: l }).eq('id', uid).then(() => {}, () => {});
   }, [uid]);
   const t = useCallback((s: string) => translate(s, lang), [lang, rev]); // eslint-disable-line react-hooks/exhaustive-deps

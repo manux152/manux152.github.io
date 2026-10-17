@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'      # nightly rebuild keeps sitemap.xml fresh
 permissions:
   contents: read
   pages: write
@@ -29,6 +31,13 @@ jobs:
         run: |
           cp dist/index.html dist/404.html   # deep links like /match/123 load the app
           touch dist/.nojekyll               # lets the _expo folder be served
+      - name: Sitemap and robots.txt (GitHub Pages cannot rewrite URLs, so we save them as files)
+        env:
+          SB_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SB_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          curl -fsS -H "Authorization: Bearer $SB_KEY" "$SB_URL/functions/v1/sitemap" -o dist/sitemap.xml || echo "sitemap not generated (set site_url and deploy the function)"
+          curl -fsS -H "Authorization: Bearer $SB_KEY" "$SB_URL/functions/v1/robots" -o dist/robots.txt || echo "using the default robots.txt"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

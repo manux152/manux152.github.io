@@ -4,6 +4,7 @@ import { usePathname } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import { useApp } from './app-context';
+import { hasConsent } from './consent';
 
 // Anonymous page counts for Admin → Analytics. Only the page name is sent (never links with ids, names or search words),
 // plus a random code made when the app opens. No IP address, account or device details are stored.
@@ -30,7 +31,7 @@ export function normalizePath(raw: string): string | null {
 }
 
 export async function trackPage(path: string) {
-  const p = normalizePath(path); if (!p || (await isOptedOut())) return;
+  const p = normalizePath(path); if (!p || !hasConsent('analytics') || (await isOptedOut())) return;
   supabase.rpc('analytics_hit', { p_path: p, p_visitor: visitor }).then(() => {}, () => {});
 }
 

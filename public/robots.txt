@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /cart
+Disallow: /pay-return
+Disallow: /reset-password
+Disallow: /profile
+Disallow: /orders
+Disallow: /chat
+Disallow: /family
+Disallow: /dashboard
+Disallow: /login

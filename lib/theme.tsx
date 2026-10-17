@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Platform, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { hasConsent } from './consent';
 
 export type Mode = 'system' | 'light' | 'dark';
 export type Prefs = { mode: Mode; textScale: number; highContrast: boolean; reduceMotion: boolean; underlineLinks: boolean; navTheme: string; navBg: string };
@@ -51,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setPrefs = useCallback((patch: Partial<Prefs>) => {
-    setPrefsState((cur) => { const next = { ...cur, ...patch }; AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {}); return next; });
+    setPrefsState((cur) => { const next = { ...cur, ...patch }; if (hasConsent('preferences')) AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {}); return next; });
   }, []);
   const reset = useCallback(() => setPrefs(DEFAULT_PREFS), [setPrefs]);
 
