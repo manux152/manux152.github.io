@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://superstrikers.club/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://superstrikers.club/matches</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/table</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/news</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/players</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/stats</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/calendar</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/media</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/awards</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/tryouts</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/shop</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://superstrikers.club/season-review</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>

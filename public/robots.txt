@@ -11,3 +11,5 @@ Disallow: /chat
 Disallow: /family
 Disallow: /dashboard
 Disallow: /login
+
+Sitemap: https://superstrikers.club/sitemap.xml
