@@ -24,8 +24,12 @@ export default function Login() {
   const forgot = async () => {
     setErr(null); setMsg(null);
     if (!email.trim()) return setErr('Enter your email above first.');
-    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/reset-password') });
-    setMsg('If an account exists for that email, we\'ve sent a reset link.');
+    setBusy(true);
+    // Sent by our own function so the email always uses the club's template and design.
+    const { error } = await supabase.functions.invoke('password-reset', { body: { email: email.trim() } });
+    setBusy(false);
+    if (error) return setErr(error.message);
+    setMsg('If an account exists for that email, we\'ve sent a reset link. Check your spam folder too.');
   };
   const signUp = async () => {
     setErr(null); setMsg(null);

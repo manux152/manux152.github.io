@@ -23,7 +23,10 @@ Deno.serve(async (req) => {
   if (!tpl) return fail(500, `Email template "${key}" is missing`);
 
   const base = Deno.env.get('SUPABASE_URL')!;
-  const actionUrl = `${base}/auth/v1/verify?token=${encodeURIComponent(ed.token_hash)}&type=${encodeURIComponent(ed.email_action_type)}&redirect_to=${encodeURIComponent(ed.redirect_to ?? ed.site_url ?? '')}`;
+  const site = (ctx.appUrl || '').replace(/\/+$/, '');
+  const actionUrl = ed.email_action_type === 'recovery' && /^https:\/\//.test(site)
+    ? `${site}/reset-password?token_hash=${encodeURIComponent(ed.token_hash)}&type=recovery`
+    : `${base}/auth/v1/verify?token=${encodeURIComponent(ed.token_hash)}&type=${encodeURIComponent(ed.email_action_type)}&redirect_to=${encodeURIComponent(ed.redirect_to ?? ed.site_url ?? '')}`;
   const name = user.user_metadata?.full_name as string | undefined;
   const vars = { ...commonVars(ctx, user.email, name), action_url: actionUrl };
   const out = renderEmail(tpl, vars, ctx.theme);
