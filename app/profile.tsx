@@ -29,10 +29,9 @@ export default function MyProfile() {
   if (!loaded) return <Loading />;
 
   const uploaded = async (url: string) => {
-    setErr(null);
     const { error } = await supabase.rpc('update_my_player_profile', { p_photo: url });
-    if (error) return setErr(error.message);
-    setAvatar(url); setMsg('Photo updated.');
+    if (error) throw new Error(error.message);   // shown right under the photo
+    setAvatar(url); await reload();                // the header picture updates too
   };
   const save = async () => {
     setErr(null); setMsg(null); setBusy(true);

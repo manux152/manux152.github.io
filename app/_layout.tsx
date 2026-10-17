@@ -20,6 +20,8 @@ import { PwaSetup } from '../components/PwaSetup';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { LegalGate } from '../components/LegalGate';
 import { CookieBanner } from '../components/CookieBanner';
+import { NavArrows } from '../components/NavArrows';
+import { useNavTracker } from '../lib/navHistory';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -30,6 +32,7 @@ function Inner() {
   const router = useRouter(); const look = useNavLook();
   useEffect(() => initPush((route) => router.push(route as any)), []); // eslint-disable-line
   usePageViews();
+  useNavTracker();
   if (!ready) return <Loading />;
   return (
     <LegalGate>
@@ -37,7 +40,7 @@ function Inner() {
       <PwaSetup />
       <OfflineBanner />
       <StatusBar style={look.light ? 'dark' : 'light'} />
-      <Stack screenOptions={{ headerStyle: { backgroundColor: look.bg }, headerBackground: () => <NavBackground look={look} />, headerTintColor: look.text, headerTitleStyle: { color: look.text }, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack screenOptions={{ headerStyle: { backgroundColor: look.bg }, headerBackground: () => <NavBackground look={look} />, headerTintColor: look.text, headerTitleStyle: { color: look.text }, headerLeft: () => <NavArrows color={look.text} />, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: t('Sign in') }} />
         <Stack.Screen name="news/[slug]" options={{ title: t('News') }} />
