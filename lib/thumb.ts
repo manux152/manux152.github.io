@@ -6,5 +6,5 @@ export function thumbUrl(url: string, width = 480, quality = 70): string {
   const i = url.indexOf(marker);
   if (i < 0) return url;
   const base = url.slice(0, i) + '/storage/v1/render/image/public/' + url.slice(i + marker.length).split('?')[0];
-  return `${base}?width=${width}&quality=${quality}&resize=cover`;
+  return `${base}?width=${width}&quality=${quality}&resize=contain`;
 }
