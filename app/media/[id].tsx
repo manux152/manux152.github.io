@@ -3,7 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Screen, H, T, Loading, fmtDate } from '../../components/ui';
-import { FullImage } from '../../components/FullImage';
+import { PhotoTile } from '../../components/PhotoTile';
 import { Masonry } from '../../components/Masonry';
 import { Lightbox, LightItem } from '../../components/Lightbox';
 import { SortFilterBar } from '../../components/SortFilterBar';
@@ -13,7 +13,7 @@ import { useLayout } from '../../lib/layout';
 import { Person, fetchTagPeople, videoThumb } from '../../lib/tags';
 import { ITEM_SORTS, ItemSort, MediaType, filterItems, sortItems } from '../../lib/mediaView';
 
-// Album page: a "Photos" section and a "Videos" section, each shown whole (never cropped). Filter to photos only or videos only, sort, search captions.
+// Album page: a "Photos" section and a "Videos" section, photos shown as same-size tiles (tap for the full original). Filter to photos only or videos only, sort, search captions.
 export default function Album() {
   const { id, item, type } = useLocalSearchParams<{ id: string; item?: string; type?: string }>(); const { cols } = useLayout();
   const a = useTable('albums', (q) => q.eq('id', id), [id]);
@@ -35,7 +35,7 @@ export default function Album() {
     const idx = shown.findIndex((x) => x.id === m.id); const thumb = m.kind === 'video' ? videoThumb(m.url) : null;
     return (
       <View style={{ gap: 6 }}>
-        {m.kind === 'image' ? <FullImage uri={m.url} alt={m.caption || 'Photo'} onPress={() => setOpen(idx)} />
+        {m.kind === 'image' ? <PhotoTile uri={m.url} alt={m.caption || 'Photo'} onPress={() => setOpen(idx)} />
           : (
             <Pressable accessibilityRole="button" accessibilityLabel={`Play video${m.caption ? ': ' + m.caption : ''}`} onPress={() => setOpen(idx)} style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 10, overflow: 'hidden', backgroundColor: '#111', alignItems: 'center', justifyContent: 'center' }}>
               {thumb ? <Image source={{ uri: thumb }} accessibilityLabel="" contentFit="contain" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} /> : null}

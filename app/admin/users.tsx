@@ -22,8 +22,19 @@ export default function Users() {
   const [err, setErr] = useState<string | null>(null);
   if (!can('users.manage')) return <Screen><T>No permission.</T></Screen>;
   if (profiles.loading || roles.loading) return <Loading />;
-  const roleOpts = (roles.data as any[]).map((r) => ({ value: r.id, label: r.name }));
   const rolesOf = (uid: string) => (userRoles.data as any[]).filter((x) => x.user_id === uid).map((x) => x.role_id);
+
+  // Levels of hierarchy: you can only manage accounts below your own level (higher number = more authority). Needs migration 035.
+  const roleList = roles.data as any[];
+  const hasLevels = roleList.some((r) => r.level != null);
+  const levelOfRole = (rid: string) => roleList.find((r) => r.id === rid)?.level ?? 10;
+  const levelOf = (uid: string) => Math.max(0, ...rolesOf(uid).map(levelOfRole));
+  const meId = session?.user.id;
+  const myLevel = meId ? levelOf(meId) : 0;
+  const isTop = hasLevels && myLevel > 0 && myLevel >= Math.max(...roleList.map((r) => r.level ?? 0));
+  const above = (p: any) => p.id !== meId && (!hasLevels || myLevel > levelOf(p.id));
+  const roleNames = (uid: string) => rolesOf(uid).map((rid) => roleList.find((r) => r.id === rid)?.name).filter(Boolean).join(', ');
+  const roleOpts = roleList.filter((r) => !hasLevels || isTop || r.level < myLevel).map((r) => ({ value: r.id, label: r.name }));
 
   const q = search.trim().toLowerCase();
   const nameOf = (p: any) => (p.full_name || p.email || '').toLowerCase();
@@ -75,12 +86,14 @@ export default function Users() {
   const row = (p: any) => (
     <Card key={p.id}>
       <T style={{ fontWeight: '700' }}>{p.full_name || p.email}</T><T muted>{p.email}</T>
+      {roleNames(p.id) ? <T muted>{roleNames(p.id)}</T> : null}
       <Btn title={open === p.id ? 'Close' : 'Manage'} kind="ghost" onPress={() => setOpen(open === p.id ? null : p.id)} />
       {open === p.id && (<>
-        <Chips multi options={roleOpts} value={rolesOf(p.id)} onChange={(v) => setRoles(p.id, v)} />
+        {above(p) ? <Chips multi options={roleOpts} value={rolesOf(p.id)} onChange={(v) => setRoles(p.id, v)} />
+          : p.id !== meId ? <T muted>This account is at or above your level, so you can only email it.</T> : null}
         {can('emails.manage') && <Btn title="Send email" kind="ghost" onPress={() => router.push(`/admin/email-send?user=${p.id}` as any)} />}
-        <Btn title={p.is_active ? 'Deactivate' : 'Activate'} kind="ghost" onPress={() => toggleActive(p)} />
-        {p.id !== session?.user.id && <Btn title="Delete account" kind="danger" onPress={() => removeUser(p)} />}
+        {above(p) && <Btn title={p.is_active ? 'Deactivate' : 'Activate'} kind="ghost" onPress={() => toggleActive(p)} />}
+        {above(p) && <Btn title="Delete account" kind="danger" onPress={() => removeUser(p)} />}
       </>)}
     </Card>
   );

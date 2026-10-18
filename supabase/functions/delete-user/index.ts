@@ -19,6 +19,10 @@ Deno.serve(async (req) => {
   if (!user_id || typeof user_id !== 'string') return json({ error: 'Choose an account to delete.' }, 400);
   if (user_id === user.id) return json({ error: 'Use “Delete my account” on your own Account page to remove yourself.' }, 400);
 
+  // Levels of hierarchy (migration 035): you can only delete accounts below your own level
+  const { data: canManage, error: le } = await caller.rpc('can_manage_user', { target: user_id });
+  if (!le && canManage === false) return json({ error: 'You can only delete accounts below your own level.' }, 403);
+
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   // Never leave the team without anyone who can manage users
   const { data: rp } = await admin.from('role_permissions').select('role_id').eq('permission_key', 'users.manage');

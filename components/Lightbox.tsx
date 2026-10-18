@@ -7,6 +7,7 @@ import { VideoPlayer, isHosted } from './VideoPlayer';
 import { EmbeddedVideo } from './EmbeddedVideo';
 import { embedInfo } from '../lib/embed';
 import { Person, personHref, videoThumb } from '../lib/tags';
+import { thumbUrl } from '../lib/thumb';
 
 export type LightItem = { id: string; kind: 'image' | 'video'; url: string; title?: string | null; caption?: string | null; meta?: string[]; people?: Person[] };
 
@@ -31,7 +32,9 @@ export function Lightbox({ items, index, onIndex, onClose }: { items: LightItem[
         </View>
         <ScrollView contentContainerStyle={{ padding: 12, gap: 12, alignItems: 'center' }}>
           <View style={{ width: '100%', maxWidth: 1200 }}>
-            {it.kind === 'image' ? <Image source={{ uri: it.url }} accessibilityLabel={it.caption || it.title || 'Picture'} contentFit="contain" style={{ width: '100%', height: mediaH }} />
+            {it.kind === 'image' ? <View style={{ width: '100%', height: mediaH, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                <Image key={it.id} source={{ uri: it.url }} placeholder={{ uri: thumbUrl(it.url) }} placeholderContentFit="contain" cachePolicy="memory-disk" priority="high" accessibilityLabel={it.caption || it.title || 'Picture'} contentFit="contain" transition={150} style={{ width: '100%', height: '100%' }} />
+              </View>
               : isHosted(it.url) ? <VideoPlayer key={it.id} uri={it.url} />
               : embedInfo(it.url).kind === 'embed' ? <EmbeddedVideo key={it.id} url={it.url} autoplay />
               : (<View style={{ gap: 10 }}>

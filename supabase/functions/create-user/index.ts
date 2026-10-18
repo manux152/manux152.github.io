@@ -18,6 +18,15 @@ Deno.serve(async (req) => {
   if (!passwordOk(String(password))) return json({ error: PASSWORD_ERROR }, 400);
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  // Levels of hierarchy (migration 035): you can only give roles below your own level (the top level may give any role)
+  if (role_ids?.length) {
+    const { data: myLevel, error: me } = await caller.rpc('my_level');
+    const { data: top } = await caller.rpc('my_is_top');
+    if (!me) {
+      const { data: rl } = await admin.from('roles').select('id,level').in('id', role_ids);
+      if ((rl ?? []).some((r: any) => !(r.level < Number(myLevel) || top === true))) return json({ error: 'You can only give roles below your own level.' }, 403);
+    }
+  }
   // Admin-created accounts pass through the sign-up rules with a short-lived, email-locked, role-less code
   const code = ('ADMIN-' + crypto.randomUUID()).toUpperCase();   // the sign-up rule compares codes in UPPER case
   const { error: ce } = await admin.from('team_codes').insert({ code, email: String(email).toLowerCase(), bypass_domain: true, assign_role: false,
