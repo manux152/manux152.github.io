@@ -19,9 +19,10 @@ Deno.serve(async (req) => {
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   // Admin-created accounts pass through the sign-up rules with a short-lived, email-locked, role-less code
-  const code = 'ADMIN-' + crypto.randomUUID();
-  await admin.from('team_codes').insert({ code, email: String(email).toLowerCase(), bypass_domain: true, assign_role: false,
+  const code = ('ADMIN-' + crypto.randomUUID()).toUpperCase();   // the sign-up rule compares codes in UPPER case
+  const { error: ce } = await admin.from('team_codes').insert({ code, email: String(email).toLowerCase(), bypass_domain: true, assign_role: false,
     expires_at: new Date(Date.now() + 10 * 60000).toISOString(), note: 'Created by an admin' });
+  if (ce) return json({ error: 'Could not prepare the account: ' + ce.message }, 400);
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name, team_code: code } });
   if (error) { await admin.from('team_codes').delete().eq('code', code); return json({ error: error.message }, 400); }
   if (role_ids?.length) {

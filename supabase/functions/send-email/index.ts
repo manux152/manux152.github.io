@@ -125,7 +125,8 @@ Deno.serve(async (req) => {
   const admin = adminClient(); const ctx = await loadContext(admin);
 
   const queueId = body.queue_id ?? body.record?.id;
-  if (queueId) { if (auth !== `Bearer ${serviceKey}`) return json({ error: 'Forbidden' }, 403); return processQueue(admin, ctx, queueId); }
+  const isServiceRole = (() => { try { const p = JSON.parse(atob(auth.replace('Bearer ', '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.role === 'service_role'; } catch { return false; } })();
+if (queueId) { if (auth !== `Bearer ${serviceKey}` && !isServiceRole) return json({ error: 'Forbidden' }, 403); return processQueue(admin, ctx, queueId); }
 
   const caller = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } });
   const { data: { user } } = await caller.auth.getUser();
