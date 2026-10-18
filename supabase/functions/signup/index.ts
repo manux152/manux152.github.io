@@ -55,6 +55,8 @@ Deno.serve(async (req) => {
   if (!passwordOk(password)) return json({ error: PASSWORD_ERROR }, 400);
   const full_name = clean(b.full_name, 120), team_code = clean(b.team_code, 40), referral_code = clean(b.referral_code, 20);
 
+  if (!full_name) return json({ error: 'Please enter your full name.' }, 400);
+
   const { data: check } = await admin.rpc('check_signup', { p_email: email, p_code: team_code });
   if (check === 'code') return json({ error: 'That team code is not valid, has already been used, has expired, or is for a different email.' }, 400);
   if (check === 'domain') return json({ error: 'Please use your team email address.' }, 400);

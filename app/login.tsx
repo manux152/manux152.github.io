@@ -49,7 +49,10 @@ export default function Login() {
   };
   const signUp = async () => {
     setErr(null); setMsg(null);
-    if (!email.trim() || !password) return setErr('Enter your email and a password.');
+    if (!name.trim()) return setErr('Please enter your full name.');
+    if (!email.trim()) return setErr('Please enter your email address.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErr('Enter a valid email address.');
+    if (!password) return setErr('Please choose a password.');
     if (!checkPassword(password).valid) return setErr(PASSWORD_ERROR);
     setBusy(true);
     const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
@@ -69,9 +72,9 @@ export default function Login() {
         <Card><T muted>Player accounts need the team email address{domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''} and a one-time team code from the club.
           Not on the team yet? Check the Tryouts section.</T></Card>
       )}
-      {mode === 'up' && <Input label="Full name" value={name} onChangeText={setName} />}
-      <Input label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-      <Input label="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      {mode === 'up' && <Input label="Full name" required autoComplete="name" textContentType="name" value={name} onChangeText={setName} />}
+      <Input label="Email" required={mode === 'up'} autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <Input label="Password" required={mode === 'up'} secureTextEntry value={password} onChangeText={setPassword} />
       {mode === 'up' && <PasswordChecklist password={password} />}
       {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
