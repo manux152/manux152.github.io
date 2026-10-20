@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
-import { Screen, H, T, Loading, fmtDate } from '../../components/ui';
+import { Screen, H, T, Btn, Loading, fmtDate } from '../../components/ui';
 import { PhotoTile } from '../../components/PhotoTile';
 import { Masonry } from '../../components/Masonry';
 import { Lightbox, LightItem } from '../../components/Lightbox';
@@ -19,6 +19,7 @@ export default function Album() {
   const a = useTable('albums', (q) => q.eq('id', id), [id]);
   const items = useTable('media_items', (q) => q.eq('album_id', id).order('sort_order').order('created_at', { ascending: false }), [id]);
   const [people, setPeople] = useState<Record<string, Person[]>>({}); const [open, setOpen] = useState<number | null>(null);
+  const [photoLimit, setPhotoLimit] = useState(12); const [videoLimit, setVideoLimit] = useState(6);   // only load a page at a time: saves bandwidth
   const [query, setQuery] = useState(''); const [sort, setSort] = useState<ItemSort>('newest'); const [kind, setKind] = useState<MediaType>(type === 'image' || type === 'video' ? type : 'all');
   const list = items.data as any[];
   useEffect(() => { if (list.length) fetchTagPeople('media', list.map((m) => m.id)).then(setPeople).catch(() => {}); }, [items.data]); // eslint-disable-line
@@ -57,11 +58,13 @@ export default function Album() {
       {list.length > 0 && shown.length === 0 && <T muted>Nothing matches. Try another word or clear the filter.</T>}
       {photos.length > 0 && <>
         <SectionHeading icon="🖼️" title="Photos" count={photos.length} subtitle="Tap a photo to see it full size with its caption and details." />
-        <Masonry items={photos} columns={columns} keyOf={(m) => m.id} render={tile} />
+        <Masonry items={photos.slice(0, photoLimit)} columns={columns} keyOf={(m) => m.id} render={tile} />
+        {photos.length > photoLimit ? <Btn title={`Show more photos (${photos.length - photoLimit} left)`} kind="ghost" onPress={() => setPhotoLimit((n) => n + 12)} /> : null}
       </>}
       {videos.length > 0 && <>
         <SectionHeading icon="🎬" title="Videos" count={videos.length} subtitle="Tap a video to watch it." />
-        <Masonry items={videos} columns={Math.min(columns, 3)} keyOf={(m) => m.id} render={tile} />
+        <Masonry items={videos.slice(0, videoLimit)} columns={Math.min(columns, 3)} keyOf={(m) => m.id} render={tile} />
+        {videos.length > videoLimit ? <Btn title={`Show more videos (${videos.length - videoLimit} left)`} kind="ghost" onPress={() => setVideoLimit((n) => n + 6)} /> : null}
       </>}
       <Lightbox items={light} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
     </Screen>

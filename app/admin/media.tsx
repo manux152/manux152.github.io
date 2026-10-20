@@ -13,6 +13,7 @@ import { embedInfo, providerName } from '../../lib/embed';
 import { useLayout } from '../../lib/layout';
 import { SortFilterBar } from '../../components/SortFilterBar';
 import { SectionHeading } from '../../components/SectionHeading';
+import { uploadPhotoWithThumb, CACHE_1Y } from '../../lib/upload';
 import { ITEM_SORTS, ItemSort, MediaType, filterItems, sortItems } from '../../lib/mediaView';
 
 const MAX_MB = 50;
@@ -50,17 +51,44 @@ export default function AdminMedia() {
       n++; setBusy(`Uploading ${n} of ${res.assets.length}…`);
       if (a.fileSize && a.fileSize > MAX_MB * 1048576) { setErr(`${a.fileName ?? 'File'} is over ${MAX_MB} MB — trim or compress it first.`); continue; }
       const contentType = a.mimeType ?? (kind === 'videos' ? 'video/mp4' : 'image/jpeg');
-      const path = `${album}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extOf(a)}`;
-      let body: any;
-      if (Platform.OS === 'web') body = await (await fetch(a.uri)).blob();
-      else { body = new FormData(); body.append('file', { uri: a.uri, name: path.split('/').pop(), type: contentType } as any); }
-      const up = await supabase.storage.from('media').upload(path, body, { contentType });
-      if (up.error) { setErr(up.error.message); break; }
-      const { data } = supabase.storage.from('media').getPublicUrl(path);
-      const { error } = await supabase.from('media_items').insert({ album_id: album, kind: kind === 'videos' ? 'video' : 'image', url: data.publicUrl, caption: caption || null });
+      let publicUrl: string;
+      try {
+        if (kind === 'images') publicUrl = await uploadPhotoWithThumb('media', album, a.uri, a.width);   // shrunk to 1600px + small grid thumbnail
+        else {
+          const path = `${album}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extOf(a)}`;
+          let body: any;
+          if (Platform.OS === 'web') body = await (await fetch(a.uri)).blob();
+          else { body = new FormData(); body.append('file', { uri: a.uri, name: path.split('/').pop(), type: contentType } as any); }
+          const up = await supabase.storage.from('media').upload(path, body, { contentType, cacheControl: CACHE_1Y });
+          if (up.error) { setErr(up.error.message); break; }
+          publicUrl = supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
+        }
+      } catch (e: any) { setErr(e?.message ?? 'Upload failed'); break; }
+      const { error } = await supabase.from('media_items').insert({ album_id: album, kind: kind === 'videos' ? 'video' : 'image', url: publicUrl, caption: caption || null });
       if (error) { setErr(error.message); break; }
     }
     setBusy(null); setCaption(''); await items.refresh();
+  };
+  // One-time cleanup: re-saves every old full-size photo as a 1600px version + small thumbnail, then deletes the big original.
+  const shrinkExisting = async () => {
+    setErr(null); setInfo(null);
+    const { data: all, error } = await supabase.from('media_items').select('id,album_id,url').eq('kind', 'image');
+    if (error) return setErr(error.message);
+    const marker = '/object/public/media/';
+    const todo = (all ?? []).filter((m: any) => m.url.includes(marker) && !/_f\.jpg$/i.test(m.url));
+    if (!todo.length) return setInfo('All photos are already shrunk. Nothing to do.');
+    let done = 0, failed = 0;
+    for (const m of todo as any[]) {
+      setBusy(`Shrinking photo ${done + failed + 1} of ${todo.length}…`);
+      try {
+        const newUrl = await uploadPhotoWithThumb('media', m.album_id, m.url);
+        const { error: ue } = await supabase.from('media_items').update({ url: newUrl }).eq('id', m.id);
+        if (ue) throw new Error(ue.message);
+        await supabase.storage.from('media').remove([decodeURIComponent(m.url.split(marker)[1])]);
+        done++;
+      } catch (e: any) { failed++; setErr(e?.message ?? 'One photo could not be shrunk'); }
+    }
+    setBusy(null); setInfo(`Shrunk ${done} photo${done === 1 ? '' : 's'}${failed ? `, ${failed} failed (run it again)` : ''}. Your page now downloads far less data.`); await items.refresh();
   };
   const addLink = async () => {
     if (!album || !video.trim()) return setErr('Choose an album and paste a video link');
@@ -97,13 +125,14 @@ export default function AdminMedia() {
   return (
     <Screen>
       <H>Photos & videos</H>
-      <T muted>Create albums under Admin → Albums, then add media here. Files up to {MAX_MB} MB.</T>
+      <T muted>Create albums under Admin → Albums, then add media here. Photos are shrunk automatically. Videos up to {MAX_MB} MB, but a YouTube link below uses no storage bandwidth at all.</T>
       <Chips options={(albums.data as any[]).map((a) => ({ value: a.id, label: a.title }))} value={album} onChange={setAlbum} />
       {album && (<>
         <Input label="Caption (optional, applies to this upload)" value={caption} onChangeText={setCaption} />
         <Btn title="Upload photos" onPress={() => pick('images')} disabled={!!busy} />
         <Btn title="Upload videos" onPress={() => pick('videos')} disabled={!!busy} />
         {busy ? <T muted>{busy}</T> : null}
+        <Btn title="Shrink existing photos (saves bandwidth)" kind="ghost" onPress={shrinkExisting} disabled={!!busy} />
         <Input label="Or add a video link (YouTube, Vimeo, Facebook, TikTok, Instagram, Google Drive, a .mp4 file…) — it plays inside the app" autoCapitalize="none" value={video} onChangeText={setVideo} />
         <Btn title="Add video link" kind="ghost" onPress={addLink} />
         <Err msg={err} />{info ? <T style={{ fontWeight: '700' }}>{info}</T> : null}

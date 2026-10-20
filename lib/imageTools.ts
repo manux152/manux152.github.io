@@ -26,7 +26,7 @@ export type EditOp =
   | { type: 'flip'; dir: 'h' | 'v' }
   | { type: 'crop'; aspect: number; zoom: number; fx: number; fy: number };
 
-/** Applies edits and returns a JPEG (max 1920px wide). Without the manipulator module the image is returned unchanged. */
+/** Applies edits and returns a JPEG (max 1600px wide). Without the manipulator module the image is returned unchanged. */
 export async function editImage(uri: string, ops: EditOp[], format: 'jpeg' | 'png' = 'jpeg'): Promise<Asset> {
   const fmt = format === 'png' ? Manip?.SaveFormat?.PNG : Manip?.SaveFormat?.JPEG; const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
   if (!Manip) return { uri };
@@ -41,11 +41,11 @@ export async function editImage(uri: string, ops: EditOp[], format: 'jpeg' | 'pn
       cw = Math.floor(cw / op.zoom); ch = Math.floor(ch / op.zoom);
       actions = [{ crop: { originX: Math.round((w - cw) * op.fx), originY: Math.round((h - ch) * op.fy), width: cw, height: ch } }];
     }
-    const out = await Manip.manipulateAsync(cur.uri, actions, { compress: 0.88, format: fmt });
+    const out = await Manip.manipulateAsync(cur.uri, actions, { compress: 0.8, format: fmt });
     cur = { uri: out.uri, width: out.width, height: out.height, mimeType };
   }
-  if ((cur.width ?? 0) > 1920) {
-    const out = await Manip.manipulateAsync(cur.uri, [{ resize: { width: 1920 } }], { compress: 0.85, format: fmt });
+  if ((cur.width ?? 0) > 1600) {
+    const out = await Manip.manipulateAsync(cur.uri, [{ resize: { width: 1600 } }], { compress: 0.8, format: fmt });
     cur = { uri: out.uri, width: out.width, height: out.height, mimeType };
   }
   return { ...cur, mimeType };
@@ -93,7 +93,7 @@ export async function uploadHeroVideo(a: ImagePicker.ImagePickerAsset): Promise<
   let body: any;
   if (Platform.OS === 'web') body = await (await fetch(a.uri)).blob();
   else { body = new FormData(); body.append('file', { uri: a.uri, name: path.split('/').pop(), type: mime } as any); }
-  const up = await supabase.storage.from(HERO_BUCKET).upload(path, body, { contentType: mime });
+  const up = await supabase.storage.from(HERO_BUCKET).upload(path, body, { contentType: mime, cacheControl: '31536000' });
   if (up.error) throw new Error(/bucket not found/i.test(up.error.message) ? 'The video storage is not set up yet. Run migration 018_hero_video.sql in Supabase.' : up.error.message);
   return supabase.storage.from(HERO_BUCKET).getPublicUrl(path).data.publicUrl;
 }
