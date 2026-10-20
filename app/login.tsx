@@ -13,11 +13,12 @@ const REVOKED_MSG = 'This account has been deactivated or deleted, so you have b
 export default function Login() {
   const r = useRouter(); const params = useLocalSearchParams<{ ref?: string }>();
   const { settings } = useApp();
-  const [mode, setMode] = useState<'in' | 'up'>(typeof params.ref === 'string' && params.ref ? 'up' : 'in');
+  const [mode, setMode] = useState<'in' | 'up' | 'mfa'>(typeof params.ref === 'string' && params.ref ? 'up' : 'in');
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [name, setName] = useState(''); const [code, setCode] = useState('');
   const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [factorId, setFactorId] = useState(''); const [otp, setOtp] = useState('');
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const domains: string[] = Array.isArray(settings.allowed_email_domains) ? settings.allowed_email_domains : [];
 
@@ -25,9 +26,24 @@ export default function Login() {
   const signIn = async () => {
     setBusy(true); setErr(null);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setBusy(false);
-    if (error) { setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); } else r.replace('/');
+    if (error) { setBusy(false); setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); return; }
+    // Two-step sign-in: if this person turned on 2FA, ask for the 6-digit code before letting them in
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+      const { data: f } = await supabase.auth.mfa.listFactors();
+      const id = f?.totp?.find((x) => x.status === 'verified')?.id;
+      if (id) { setBusy(false); setFactorId(id); setOtp(''); setMode('mfa'); return; }
+    }
+    setBusy(false); r.replace('/');
   };
+  const verifyOtp = async () => {
+    setErr(null); setBusy(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: otp.replace(/\s/g, '') });
+    setBusy(false);
+    if (error) return setErr(/invalid|expired/i.test(error.message) ? 'That code is not right. Use the newest code from your authenticator app.' : error.message);
+    r.replace('/');
+  };
+  const cancelMfa = async () => { await supabase.auth.signOut({ scope: 'local' }); setMode('in'); setPassword(''); setOtp(''); setErr(null); };
   const forgot = async () => {
     setErr(null); setMsg(null);
     if (!email.trim()) return setErr('Enter your email above first.');
@@ -64,6 +80,17 @@ export default function Login() {
     if (error) return setErr(error.message);
     setMsg('Account created. We\'ve emailed you a confirmation link. Open it, then sign in. Check your spam folder too.'); setMode('in'); setNeedsConfirm(true);
   };
+
+  if (mode === 'mfa') return (
+    <Screen>
+      <H>Enter your 6-digit code</H>
+      <Card><T muted>Open your authenticator app and type the code shown for Super Strikers. Lost your phone? Ask a club admin to reset your 2FA.</T></Card>
+      <Input label="6-digit code" keyboardType="number-pad" maxLength={7} autoComplete="one-time-code" autoFocus value={otp} onChangeText={setOtp} onSubmitEditing={verifyOtp} />
+      <Err msg={err} />
+      <Btn title="Verify and sign in" onPress={verifyOtp} disabled={busy || otp.replace(/\s/g, '').length < 6} />
+      <Btn title="Cancel" kind="ghost" onPress={cancelMfa} />
+    </Screen>
+  );
 
   return (
     <Screen>

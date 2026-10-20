@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { needsMfa } from './mfa';
 import { supabase, endRevokedSession } from './supabase';
 import { clearOfflineCache } from './offline';
 import { onPullRefresh } from './refresh';
@@ -58,14 +59,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNav((nv ?? []) as NavItem[]);
     setPages((pg ?? []) as Ctx['pages']); setSponsors(((sp ?? []) as any[]).filter((s) => (!s.starts_on || s.starts_on <= today) && (!s.ends_on || s.ends_on >= today)).sort((a, b) => (TIER[a.tier] ?? 4) - (TIER[b.tier] ?? 4)) as Ctx['sponsors']);
     const { data } = await supabase.auth.getSession();
-    setSession(data.session);
-    await loadPerms(data.session);
+    const cur = needsMfa(data.session) ? null : data.session;   // password entered but 2FA code still owed → not signed in yet
+    setSession(cur);
+    await loadPerms(cur);
   }, [loadPerms]);
 
   useEffect(() => onPullRefresh(reload), [reload]);    // pulling a page down also refreshes settings, sponsors and menus
   useEffect(() => {
     reload().finally(() => setReady(true));
-    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => { if (e === 'SIGNED_OUT') clearOfflineCache(); setSession(s); loadPerms(s); });
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => { if (e === 'SIGNED_OUT') clearOfflineCache(); const cur = needsMfa(s) ? null : s; setSession(cur); loadPerms(cur); });
     return () => sub.subscription.unsubscribe();
   }, [reload, loadPerms]);
 

@@ -75,6 +75,13 @@ export default function Users() {
     if (error || data?.error) return setErr(data?.error ?? error?.message ?? 'Could not delete the account');
     await profiles.refresh(); await userRoles.refresh(); await deleted.refresh(); setOpen(null);
   };
+  const reset2fa = async (p: any) => {
+    setErr(null);
+    if (!(await ask('Reset 2FA for this account?', `${p.email} will be able to sign in with just their password again, and can set up 2FA again later. Use this only if they lost their phone.`, 'Reset 2FA'))) return;
+    const { data, error } = await supabase.functions.invoke('reset-2fa', { body: { user_id: p.id } });
+    if (error || data?.error) return setErr(data?.error ?? error?.message ?? 'Could not reset 2FA');
+    setErr(data?.removed ? `2FA reset for ${p.email}.` : `${p.email} did not have 2FA turned on.`);
+  };
   const create = async () => {
     setErr(null);
     if (!checkPassword(form!.password).valid) return setErr(PASSWORD_ERROR);
@@ -92,6 +99,7 @@ export default function Users() {
         {above(p) ? <Chips multi options={roleOpts} value={rolesOf(p.id)} onChange={(v) => setRoles(p.id, v)} />
           : p.id !== meId ? <T muted>This account is at or above your level, so you can only email it.</T> : null}
         {can('emails.manage') && <Btn title="Send email" kind="ghost" onPress={() => router.push(`/admin/email-send?user=${p.id}` as any)} />}
+        {above(p) && <Btn title="Reset 2FA" kind="ghost" onPress={() => reset2fa(p)} />}
         {above(p) && <Btn title={p.is_active ? 'Deactivate' : 'Activate'} kind="ghost" onPress={() => toggleActive(p)} />}
         {above(p) && <Btn title="Delete account" kind="danger" onPress={() => removeUser(p)} />}
       </>)}
