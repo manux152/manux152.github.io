@@ -32,6 +32,10 @@ jobs:
           node scripts/inject-head.js        # Google Search Console verification tag
           cp dist/index.html dist/404.html   # deep links like /match/123 load the app
           touch dist/.nojekyll               # lets the _expo folder be served
+          # Give every public page its own real file so GitHub Pages answers 200 (not 404) and Google can index it
+          for r in matches table news players stats calendar media awards tryouts shop season-review; do
+            mkdir -p "dist/$r" && cp dist/index.html "dist/$r/index.html"
+          done
       - name: Sitemap and robots.txt (GitHub Pages cannot rewrite URLs, so we save them as files)
         env:
           SB_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
