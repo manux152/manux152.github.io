@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
 import { supabase, REVOKED_KEY } from '../lib/supabase';
 import { useApp } from '../lib/app-context';
+import { passkeysSupported, passkeyError } from '../lib/passkey';
 import { appUrl } from '../lib/redirect';
 import { PasswordChecklist } from '../components/PasswordChecklist';
 import { checkPassword, PASSWORD_ERROR } from '../lib/password';
@@ -27,7 +28,10 @@ export default function Login() {
     setBusy(true); setErr(null);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) { setBusy(false); setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); return; }
-    // Two-step sign-in: if this person turned on 2FA, ask for the 6-digit code before letting them in
+    await finishSignIn();
+  };
+  // After a password OR biometric sign-in: if this person also turned on 2FA, ask for the 6-digit code before letting them in
+  const finishSignIn = async () => {
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
       const { data: f } = await supabase.auth.mfa.listFactors();
@@ -35,6 +39,11 @@ export default function Login() {
       if (id) { setBusy(false); setFactorId(id); setOtp(''); setMode('mfa'); return; }
     }
     setBusy(false); r.replace('/');
+  };
+  const passkeySignIn = async () => {
+    setErr(null); setBusy(true);
+    try { const { error } = await (supabase.auth as any).signInWithPasskey(); if (error) throw error; await finishSignIn(); }
+    catch (e: any) { setBusy(false); setErr(/banned|deactivated/i.test(String(e?.message)) ? REVOKED_MSG : passkeyError(e)); }
   };
   const verifyOtp = async () => {
     setErr(null); setBusy(true);
@@ -107,7 +116,7 @@ export default function Login() {
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}
       {mode === 'in'
-        ? <><Btn title="Sign in" onPress={signIn} disabled={busy} /><Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
+        ? <><Btn title="Sign in" onPress={signIn} disabled={busy} />{passkeysSupported() ? <Btn title="Sign in with Face ID / fingerprint" kind="ghost" onPress={passkeySignIn} disabled={busy} /> : null}<Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
         : <><Btn title="Create account" onPress={signUp} disabled={busy} /><Btn title="Back to sign in" kind="ghost" onPress={() => { setMode('in'); setErr(null); }} /></>}
     </Screen>
   );

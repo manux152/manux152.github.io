@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { useApp } from '../lib/app-context';
 import { useTable } from '../lib/useQuery';
 import { TwoFactorCard } from '../components/TwoFactorCard';
+import { PasskeyCard } from '../components/PasskeyCard';
 import { enablePush, disablePush } from '../lib/push';
 
 const confirmAsk = (title: string, msg: string) => new Promise<boolean>((res) => {
@@ -50,6 +51,7 @@ export default function Account() {
         <View style={{ flex: 1 }}><H>Account</H>{profile?.full_name ? <T style={{ fontWeight: '700' }}>{profile.full_name}</T> : null}<T muted>{session.user.email}</T></View>
         <Pressable accessibilityRole="button" accessibilityLabel="Change your profile picture" onPress={() => r.push('/profile')}><Avatar url={profile?.avatar_url} name={profile?.full_name ?? session.user.email} size={72} /><T muted style={{ fontSize: 11, textAlign: 'center' }}>{profile?.avatar_url ? 'Change' : 'Add photo'}</T></Pressable>
       </View>
+      <PasskeyCard />
       <TwoFactorCard />
       <Card>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

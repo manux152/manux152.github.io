@@ -30,7 +30,7 @@ const guardedFetch: typeof fetch = async (input, init) => {
 export const supabase = createClient(
   supabaseConfigured ? url! : 'https://placeholder.supabase.co',
   supabaseConfigured ? key! : 'placeholder-anon-key',
-  { global: { fetch: guardedFetch }, auth: { storage: AsyncStorage, autoRefreshToken: supabaseConfigured, persistSession: true, detectSessionInUrl: Platform.OS === 'web' } }
+  { global: { fetch: guardedFetch }, auth: { storage: AsyncStorage, autoRefreshToken: supabaseConfigured, persistSession: true, detectSessionInUrl: Platform.OS === 'web', experimental: { passkey: true } } as any }
 );
 
 // Edge functions: show the real reason instead of "Edge Function returned a non-2xx status code".
