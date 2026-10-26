@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "sitemap": "node scripts/generate-sitemap.js",
+    "build:web": "node scripts/generate-sitemap.js && expo export --platform web"
+  }
+}
