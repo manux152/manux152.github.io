@@ -25,7 +25,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single",
+      "output": "static",
       "favicon": "./assets/favicon.png",
       "name": "Super Strikers",
       "shortName": "Strikers",
@@ -40,7 +40,8 @@
       "expo-router",
       "expo-video",
       "expo-notifications",
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": false

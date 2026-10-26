@@ -4,6 +4,7 @@ import { usePathname } from 'expo-router';
 import { useApp } from '../lib/app-context';
 import { useI18n } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
+import seo from '../seo.config.json'; // build-time defaults, so the exported HTML has a real title, description and canonical
 
 // Per-page overrides from Admin → Search visibility (SEO). Loaded once and shared by every page.
 type Override = { path: string; title: string | null; description: string | null; image_url: string | null; noindex: boolean };
@@ -25,12 +26,12 @@ export function PageHead({ title, description, image, type = 'website', jsonLd, 
   const [over, setOver] = useState<Override | undefined>();
   useEffect(() => { let on = true; loadOverrides().then((all) => { if (on) setOver(all.find((o) => o.path === path)); }); return () => { on = false; }; }, [path]);
 
-  const team = str(settings.team_name);
-  const site = str(settings.site_url).replace(/\/$/, '');
+  const team = str(settings.team_name) || seo.brandName;
+  const site = (str(settings.site_url) || seo.siteUrl).replace(/\/$/, '');
   const pageTitle = over?.title || (title ? t(title) : '');
   const full = pageTitle ? `${pageTitle} · ${team}` : team;
-  const desc = clean(over?.description || description || str(settings.seo_description) || str(settings.hero_subtitle));
-  const img = over?.image_url || image || str(settings.seo_og_image) || str(settings.hero_image_url) || str(settings.logo_url) || '';
+  const desc = clean(over?.description || description || str(settings.seo_description) || str(settings.hero_subtitle) || seo.description);
+  const img = over?.image_url || image || str(settings.seo_og_image) || str(settings.hero_image_url) || str(settings.logo_url) || seo.shareImage || '';
   const canonical = site ? site + (path === '/' ? '' : path) : '';
   const hide = !!(noindex || over?.noindex);
   const twitter = str(settings.seo_twitter).replace(/^@?/, '@');
@@ -38,7 +39,7 @@ export function PageHead({ title, description, image, type = 'website', jsonLd, 
   const social = Array.isArray(settings.social_links) ? (settings.social_links as any[]).map((s) => s?.url).filter((u) => /^https?:\/\//.test(u ?? '')) : [];
   const graph: object[] = [];
   if (path === '/' && site) {
-    const city = str(settings.seo_city), country = str(settings.seo_country);
+    const city = str(settings.seo_city) || seo.city, country = str(settings.seo_country) || seo.country;
     graph.push({
       '@context': 'https://schema.org', '@type': 'SportsTeam', name: team, url: site, sport: 'Soccer', description: desc || undefined,
       logo: str(settings.logo_url) || undefined, image: img || undefined, sameAs: social.length ? social : undefined,

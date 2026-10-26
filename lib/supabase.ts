@@ -10,6 +10,14 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 // True only when a real .env is present (not the .env.example placeholders).
 export const supabaseConfigured = !!url && !!key && !url.includes('YOUR-PROJECT') && !key.includes('YOUR-ANON-KEY');
 
+// During the static web build the code runs in Node, where there is no window or saved login.
+const isServer = typeof window === 'undefined';
+const serverStorage = {
+  getItem: async (_k: string) => null,
+  setItem: async (_k: string, _v: string) => {},
+  removeItem: async (_k: string) => {},
+};
+
 // When the server says this account was deactivated or deleted (see migration 032), end the session on this device at once.
 let revoking = false;
 export const REVOKED_KEY = 'ss_account_revoked';
@@ -30,7 +38,7 @@ const guardedFetch: typeof fetch = async (input, init) => {
 export const supabase = createClient(
   supabaseConfigured ? url! : 'https://placeholder.supabase.co',
   supabaseConfigured ? key! : 'placeholder-anon-key',
-  { global: { fetch: guardedFetch }, auth: { storage: AsyncStorage, autoRefreshToken: supabaseConfigured, persistSession: true, detectSessionInUrl: Platform.OS === 'web', experimental: { passkey: true } } as any }
+  { global: { fetch: guardedFetch }, auth: { storage: isServer ? serverStorage : AsyncStorage, autoRefreshToken: supabaseConfigured && !isServer, persistSession: !isServer, detectSessionInUrl: Platform.OS === 'web' && !isServer, experimental: { passkey: true } } as any }
 );
 
 // Edge functions: show the real reason instead of "Edge Function returned a non-2xx status code".

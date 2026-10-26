@@ -1,13 +1,10 @@
-# Optional: build the static export and deploy to GitHub Pages.
-# In repo Settings > Pages, set Source to "GitHub Actions".
-# Add repo secrets: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY
 name: Deploy web
 on:
   push:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'   # nightly rebuild keeps sitemap and news pages fresh
+    - cron: '0 3 * * *'   # nightly rebuild keeps the sitemap and SEO settings fresh
 permissions:
   contents: read
   pages: write
@@ -28,7 +25,22 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build:web
+      - name: Build web app (SEO settings, then static export)
+        run: |
+          node scripts/fetch-seo-settings.js
+          npx expo export -p web
+      - name: GitHub Pages fixes
+        run: |
+          # Unknown links and deep links like /match/123 get this page, which loads the app
+          cp dist/+not-found.html dist/404.html || cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+      - name: Sitemap and robots.txt (GitHub Pages cannot rewrite URLs, so we save them as files)
+        env:
+          SB_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SB_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          curl -fsS -H "Authorization: Bearer $SB_KEY" "$SB_URL/functions/v1/sitemap" -o dist/sitemap.xml || echo "sitemap not generated (set site_url and deploy the function)"
+          curl -fsS -H "Authorization: Bearer $SB_KEY" "$SB_URL/functions/v1/robots" -o dist/robots.txt || echo "using the default robots.txt"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

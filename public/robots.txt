@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 
-Sitemap: https://superstrikers.club/sitemap.xml
+Sitemap: https://www.superstrikers.club/sitemap.xml

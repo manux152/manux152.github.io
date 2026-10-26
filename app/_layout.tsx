@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider, useApp } from '../lib/app-context';
 import { CartProvider } from '../lib/cart';
@@ -22,8 +22,19 @@ import { LegalGate } from '../components/LegalGate';
 import { CookieBanner } from '../components/CookieBanner';
 import { NavArrows } from '../components/NavArrows';
 import { useNavTracker } from '../lib/navHistory';
+import { PageHead } from '../components/PageHead';
 
 export { ErrorBoundary } from 'expo-router';
+
+// The web export runs before site settings load, so this puts a real title, canonical link and share card
+// into each page's HTML (search engines and WhatsApp/Facebook previews read it without running the app).
+function StaticHead() {
+  const p = usePathname() || '/';
+  const seg = p.split('/').filter(Boolean).pop() ?? '';
+  const template = /[\[+]/.test(p);
+  const title = seg && !template ? seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : undefined;
+  return <PageHead title={title} noindex={template} />;
+}
 
 function Inner() {
   const { t } = useI18n();
@@ -33,7 +44,7 @@ function Inner() {
   useEffect(() => initPush((route) => router.push(route as any)), []); // eslint-disable-line
   usePageViews();
   useNavTracker();
-  if (!ready) return <Loading />;
+  if (!ready) return <><StaticHead /><Loading /></>;
   return (
     <LegalGate>
       <Favicon />
