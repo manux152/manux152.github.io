@@ -14,7 +14,6 @@ import { NavAppearancePicker } from './NavAppearancePicker';
 import { NavBackground } from './NavBackground';
 import { Avatar, T } from './ui';
 import { PromoStrip } from './PromoStrip';
-import { NavArrows } from './NavArrows';
 import { useChatUnread } from '../lib/chat';
 
 // Classic masthead: logo and quick links on top, a ruled main-menu row underneath (wide screens);
@@ -78,7 +77,7 @@ export function SiteHeader() {
   );
 
   return (
-    <View onLayout={(e) => setHeadH(Math.round(e.nativeEvent.layout.height))} style={{ paddingTop: top, zIndex: 20 }}>
+    <View onLayout={(e) => setHeadH(Math.round(e.nativeEvent.layout.height))} style={[{ paddingTop: top, zIndex: 20 }, Platform.OS === 'web' ? ({ position: 'sticky', top: 0 } as any) : null]}>
       <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden' }}><NavBackground look={look} /></View>
       {notice ? (
         <Pressable accessibilityRole={noticeLink ? 'link' : 'text'} disabled={!noticeLink} onPress={() => (noticeLink!.startsWith('/') ? router.push(noticeLink as any) : Linking.openURL(noticeLink!))} style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingVertical: 7, paddingHorizontal: gutter }}>
@@ -90,7 +89,7 @@ export function SiteHeader() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: logoH + 24, paddingVertical: 8, gap: 8 }}>
           {wide ? (
             <>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flexShrink: 1 }}><NavArrows color={look.text} /><Link href="/" asChild><Pressable accessibilityRole="link" accessibilityLabel="Home"><Logo height={logoH} nameSize={Math.round(logoH * 0.45)} nameColor={look.text} /></Pressable></Link>{tagline && width >= 1000 ? <Text numberOfLines={2} style={{ color: look.text, opacity: 0.85, fontStyle: 'italic', fontSize: fs(13), maxWidth: 240, borderLeftWidth: 1, borderLeftColor: look.border, paddingLeft: 14 }}>{tagline}</Text> : null}</View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flexShrink: 1 }}><Link href="/" asChild><Pressable accessibilityRole="link" accessibilityLabel="Home"><Logo height={logoH} nameSize={Math.round(logoH * 0.45)} nameColor={look.text} /></Pressable></Link>{tagline && width >= 1000 ? <Text numberOfLines={2} style={{ color: look.text, opacity: 0.85, fontStyle: 'italic', fontSize: fs(13), maxWidth: 240, borderLeftWidth: 1, borderLeftColor: look.border, paddingLeft: 14 }}>{tagline}</Text> : null}</View>
               <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {utilities}
                 {look.allowPersonalise ? <Pressable accessibilityRole="button" accessibilityLabel="Change navigation appearance" onPress={() => setMenu('look')} style={{ marginLeft: 4, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: look.border }}><Text style={tx}>Appearance</Text></Pressable> : null}
@@ -99,7 +98,7 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}><NavArrows color={look.text} /><Pressable accessibilityRole="button" accessibilityLabel="Open menu" onPress={() => setMenu('all')} style={{ padding: 8 }}><Text style={{ ...tx, fontSize: 24 }}>☰</Text></Pressable></View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}><Pressable accessibilityRole="button" accessibilityLabel="Open menu" onPress={() => setMenu('all')} style={{ padding: 8 }}><Text style={{ ...tx, fontSize: 24 }}>☰</Text></Pressable></View>
               <Link href="/" asChild><Pressable accessibilityRole="link" accessibilityLabel="Home" style={{ flexShrink: 1 }}><Logo height={Math.min(logoH, 34)} nameSize={15} nameColor={look.text} /></Pressable></Link>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Link href="/search" asChild><Pressable accessibilityRole="link" accessibilityLabel="Search" style={{ padding: 8 }}><Text style={{ ...tx, fontSize: 18 }}>🔍</Text></Pressable></Link>

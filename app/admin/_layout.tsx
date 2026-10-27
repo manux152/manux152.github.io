@@ -1,17 +1,15 @@
 import { Redirect, Stack } from 'expo-router';
 import { useApp } from '../../lib/app-context';
 import { useTheme } from '../../lib/theme';
-import { NavBackground } from '../../components/NavBackground';
-import { useNavLook } from '../../lib/useNavLook';
 import { useI18n } from '../../lib/i18n';
-import { NavArrows } from '../../components/NavArrows';
+import { StackHeader } from '../../components/StackHeader';
 
 export default function AdminLayout() {
   const { session } = useApp(); const { t } = useI18n();
-  const { colors } = useTheme(); const look = useNavLook();
+  const { colors } = useTheme();
   if (!session) return <Redirect href="/login" />;
   return (
-    <Stack screenOptions={{ headerStyle: { backgroundColor: look.bg }, headerBackground: () => <NavBackground look={look} />, headerTintColor: look.text, headerTitleStyle: { color: look.text }, headerLeft: () => <NavArrows color={look.text} />, contentStyle: { backgroundColor: colors.bg } }}>
+    <Stack screenOptions={{ header: ({ options }) => <StackHeader title={typeof options.title === 'string' ? options.title : undefined} />, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="index" options={{ title: t('Admin') }} />
       <Stack.Screen name="users" options={{ title: t('Users') }} />
       <Stack.Screen name="roles" options={{ title: t('Roles') }} />

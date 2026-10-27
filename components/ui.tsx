@@ -80,7 +80,7 @@ export function Input(props: React.ComponentProps<typeof TextInput> & { label?: 
       <View>
         <TextInput accessibilityLabel={label ?? rest.placeholder} {...rest} secureTextEntry={isPw && !shown}
           {...(isPw ? { autoCapitalize: 'none' as const, autoCorrect: false } : {})} placeholderTextColor={colors.placeholder}
-          style={[{ borderWidth: prefs.highContrast ? 2 : 1, borderColor: colors.inputBorder, borderRadius: 10, padding: 10, backgroundColor: colors.inputBg, color: colors.text, fontSize: fs(15) }, isPw ? { paddingRight: 70 } : null, rest.style]} />
+          style={[{ borderWidth: prefs.highContrast ? 2 : 1, borderColor: colors.inputBorder, borderRadius: 10, padding: 10, backgroundColor: colors.inputBg, color: colors.text, fontSize: Platform.OS === 'web' ? Math.max(16, fs(15)) : fs(15) }, isPw ? { paddingRight: 70 } : null, rest.style]} />
         {isPw ? (
           <Pressable accessibilityRole="button" accessibilityLabel={shown ? 'Hide password' : 'Show password'} onPress={() => setShown((v) => !v)} hitSlop={8}
             style={{ position: 'absolute', right: 0, top: 0, bottom: 0, paddingHorizontal: 12, justifyContent: 'center' }}>

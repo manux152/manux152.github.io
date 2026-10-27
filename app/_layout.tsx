@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack, useRouter, usePathname } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider, useApp } from '../lib/app-context';
 import { CartProvider } from '../lib/cart';
@@ -12,7 +12,6 @@ import { TrText as Text } from '../components/TrText';
 import { Favicon } from '../components/Favicon';
 import { AssistantFab } from '../components/AssistantFab';
 import { CallOverlay } from '../components/CallOverlay';
-import { NavBackground } from '../components/NavBackground';
 import { useNavLook } from '../lib/useNavLook';
 import { I18nProvider, useI18n } from '../lib/i18n';
 import { usePageViews } from '../lib/analytics';
@@ -20,21 +19,9 @@ import { PwaSetup } from '../components/PwaSetup';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { LegalGate } from '../components/LegalGate';
 import { CookieBanner } from '../components/CookieBanner';
-import { NavArrows } from '../components/NavArrows';
-import { useNavTracker } from '../lib/navHistory';
-import { PageHead } from '../components/PageHead';
+import { StackHeader } from '../components/StackHeader';
 
 export { ErrorBoundary } from 'expo-router';
-
-// The web export runs before site settings load, so this puts a real title, canonical link and share card
-// into each page's HTML (search engines and WhatsApp/Facebook previews read it without running the app).
-function StaticHead() {
-  const p = usePathname() || '/';
-  const seg = p.split('/').filter(Boolean).pop() ?? '';
-  const template = /[\[+]/.test(p);
-  const title = seg && !template ? seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : undefined;
-  return <PageHead title={title} noindex={template} />;
-}
 
 function Inner() {
   const { t } = useI18n();
@@ -43,15 +30,14 @@ function Inner() {
   const router = useRouter(); const look = useNavLook();
   useEffect(() => initPush((route) => router.push(route as any)), []); // eslint-disable-line
   usePageViews();
-  useNavTracker();
-  if (!ready) return <><StaticHead /><Loading /></>;
+  if (!ready) return <Loading />;
   return (
     <LegalGate>
       <Favicon />
       <PwaSetup />
       <OfflineBanner />
       <StatusBar style={look.light ? 'dark' : 'light'} />
-      <Stack screenOptions={{ headerStyle: { backgroundColor: look.bg }, headerBackground: () => <NavBackground look={look} />, headerTintColor: look.text, headerTitleStyle: { color: look.text }, headerLeft: () => <NavArrows color={look.text} />, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack screenOptions={{ header: ({ options }) => <StackHeader title={typeof options.title === 'string' ? options.title : undefined} />, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: t('Sign in') }} />
         <Stack.Screen name="news/[slug]" options={{ title: t('News') }} />
