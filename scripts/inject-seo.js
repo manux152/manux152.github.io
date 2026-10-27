@@ -46,7 +46,7 @@ function block(route) {
   const title = known ? known.title : `${titleCase(last)} | ${BRAND}`;
   const description = known ? known.description : cfg.description;
   const url = route === '/' ? `${SITE}/` : `${SITE}${route}`;
-  const img = cfg.shareImage || '';
+  const img = process.env.SHARE_IMAGE_URL || cfg.shareImage || '';
   const lines = [
     `<title data-rh="true">${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
@@ -96,3 +96,4 @@ for (const f of walk(DIST)) {
 }
 console.log(`[seo] Baked SEO tags into ${n} pages.`);
 if (generic.length) console.log('[seo] Pages using a generated title (add them to PAGES to customize): ' + generic.join(', '));
+
