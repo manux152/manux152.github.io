@@ -55,7 +55,7 @@ export default function Codes() {
       </Card>
       {fresh.length > 0 && <Card style={{ borderColor: '#2E9E5B' }}>
         <T style={{ fontWeight: '700' }}>New codes</T>
-        {fresh.map((c) => <View key={c.id} style={{ gap: 4 }}><T style={{ fontWeight: '800', fontSize: 18, letterSpacing: 1 }}>{c.code}</T><Btn title="Share / copy" kind="ghost" onPress={() => share(c)} /></View>)}
+        {fresh.map((c) => <View key={c.id} style={{ gap: 4 }}><T style={{ fontWeight: '800', fontSize: 18, letterSpacing: 1 }}>{c.code}</T><Btn title="Share" kind="ghost" onPress={() => share(c)} /></View>)}
       </Card>}
       {msg ? <T>{msg}</T> : null}
       <H>All codes</H>
@@ -67,7 +67,7 @@ export default function Codes() {
           <T muted>{status(c)}{c.roles?.name ? ` · ${c.roles.name}` : ''}{c.email ? ` · ${c.email}` : ''}{c.note ? ` · ${c.note}` : ''}</T>
           {c.used_at ? <T muted>Used by {c.profiles?.full_name || c.profiles?.email || 'a new player'} on {new Date(c.used_at).toLocaleDateString()}</T>
             : c.expires_at ? <T muted>Expires {new Date(c.expires_at).toLocaleDateString()}</T> : null}
-          {!c.used_at && <><Btn title="Share / copy" kind="ghost" onPress={() => share(c)} /><Btn title="Revoke" kind="danger" onPress={() => revoke(c)} /></>}
+          {!c.used_at && <><Btn title="Share" kind="ghost" onPress={() => share(c)} /><Btn title="Revoke" kind="danger" onPress={() => revoke(c)} /></>}
         </Card>
       ))}
     </Screen>

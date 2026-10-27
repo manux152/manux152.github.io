@@ -5,7 +5,7 @@ import { Screen, H, T, Btn, Loading, Avatar, fmtDate } from '../../components/ui
 import { FullImage } from '../../components/FullImage';
 import { Masonry } from '../../components/Masonry';
 import { Lightbox, LightItem } from '../../components/Lightbox';
-import { shareText } from '../../lib/share';
+import { shareText, pageLink } from '../../lib/share';
 import { useApp } from '../../lib/app-context';
 import { useTable } from '../../lib/useQuery';
 import { PageHead } from '../../components/PageHead';
@@ -63,7 +63,7 @@ export default function Post() {
             {x.caption ? <T muted style={{ fontSize: 13 }}>{x.caption}</T> : null}
           </View>)} />
       </>)}
-      <Btn title="Share this story" kind="ghost" onPress={async () => setShared(await shareText(`${p.title}${settings.site_url ? ' — ' + String(settings.site_url).replace(/\/$/, '') + '/news/' + p.slug : ''}`))} />{shared ? <T muted>{shared}</T> : null}
+      <Btn title="Share this story" kind="ghost" onPress={async () => setShared(await shareText(p.title, { title: p.title, url: pageLink(settings.site_url, '/news/' + p.slug) }))} />{shared ? <T muted>{shared}</T> : null}
       {polls.map((x) => <PollCard key={x.id} poll={x} />)}
       <CommentsSection newsId={p.id} enabled={p.comments_enabled !== false} />
       <Lightbox items={light} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />

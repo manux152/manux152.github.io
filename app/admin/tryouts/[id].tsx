@@ -55,7 +55,7 @@ export default function TryoutApplications() {
             {can('emails.manage') && <Btn title="Email applicant" kind="ghost" onPress={() => router.push(`/admin/email-send?email=${encodeURIComponent(a.applicant_email)}&name=${encodeURIComponent(a.applicant_name)}` as any)} />}
             <Chips options={STATUSES.map((s) => ({ value: s, label: s }))} value={a.status} onChange={(v) => setStatus(a, v)} />
             {can('codes.manage') && (c
-              ? <><T style={{ fontWeight: '700' }}>{c.used_at ? 'Code used — player has joined ✓' : `Code: ${c.code}`}</T>{!c.used_at && <Btn title="Share / copy code" kind="ghost" onPress={() => share(c, a)} />}</>
+              ? <><T style={{ fontWeight: '700' }}>{c.used_at ? 'Code used — player has joined ✓' : `Code: ${c.code}`}</T>{!c.used_at && <Btn title="Share code" kind="ghost" onPress={() => share(c, a)} />}</>
               : a.status !== 'declined' && <Btn title="Accept & generate team code" onPress={() => makeCode(a)} />)}
           </Card>
         );

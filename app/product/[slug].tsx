@@ -9,7 +9,7 @@ import { useTable } from '../../lib/useQuery';
 import { useApp } from '../../lib/app-context';
 import { useCart } from '../../lib/cart';
 import { money } from '../../lib/money';
-import { shareText } from '../../lib/share';
+import { shareText, pageLink } from '../../lib/share';
 import { PageHead } from '../../components/PageHead';
 import { Variant, colorGroups, isSold, salePct, uncolored, webUrl } from '../../lib/shop';
 
@@ -87,7 +87,7 @@ export default function Product() {
       {err ? <T style={{ color: '#B3261E' }}>{err}</T> : null}
       <Btn title={allSold ? 'Sold out' : selSold ? 'Option sold out' : 'Add to cart'} onPress={add} disabled={allSold || selSold} />
       {added && <Btn title="View cart" kind="ghost" onPress={() => router.push('/cart')} />}
-      <Btn title="Share" kind="ghost" onPress={async () => { await shareText(`${p.name}${settings.site_url ? ' — ' + String(settings.site_url).replace(/\/$/, '') + '/product/' + p.slug : ''}`); }} />
+      <Btn title="Share" kind="ghost" onPress={async () => { await shareText(p.name, { title: p.name, url: pageLink(settings.site_url, '/product/' + p.slug) }); }} />
       {group ? <ColorPreviewModal visible={preview} onClose={() => setPreview(false)} product={p.name} color={group.name} hex={group.hex} image={group.image ?? imgs[0]?.url} note={group.sold ? 'This colour is sold out.' : group.left != null && group.left <= low ? `Only ${group.left} left in this colour.` : null} onChoose={() => pickColor(group.key)} /> : null}
     </Screen>
   );

@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { useTable } from '../../lib/useQuery';
 import { useApp } from '../../lib/app-context';
 import { money } from '../../lib/money';
-import { shareText } from '../../lib/share';
+import { copyText } from '../../lib/share';
 
 const Dot = ({ ok }: { ok: boolean }) => <T style={{ color: ok ? '#2E9E5B' : '#D64545', fontWeight: '800' }}>{ok ? '● ready' : '● not set up'}</T>;
 
@@ -27,7 +27,7 @@ export default function Payments() {
     setMsg(action === 'refund' ? `Refunded ${data.refunded}.` : 'Marked as refunded.'); await pays.refresh();
   };
   const expire = async () => { setErr(null); const { data, error } = await supabase.rpc('run_expire_unpaid_orders'); if (error) setErr(error.message); else setMsg(`${data} unpaid online order(s) cancelled and returned to stock.`); };
-  const copy = async (u: string) => setMsg(await shareText(u));
+  const copy = async (u: string) => setMsg(await copyText(u));
 
   return (
     <Screen>

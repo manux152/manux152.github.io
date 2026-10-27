@@ -34,7 +34,7 @@ export default function AttendanceReport() {
         </Card>
       ))}
       {msg ? <T>{msg}</T> : null}
-      <Btn title="Copy / share as CSV" kind="ghost" onPress={async () => setMsg(await shareText(csv()))} />
+      <Btn title="Share as CSV" kind="ghost" onPress={async () => setMsg(await shareText(csv()))} />
     </Screen>
   );
 }

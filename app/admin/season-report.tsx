@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { useTable } from '../../lib/useQuery';
 import { useApp } from '../../lib/app-context';
 import { money } from '../../lib/money';
-import { shareText } from '../../lib/share';
+import { shareText, copyText } from '../../lib/share';
 import { DateTimeField } from '../../components/DateTimeField';
 
 const csvCell = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -70,8 +70,8 @@ export default function SeasonReport() {
         </Card>
         {msg ? <T>{msg}</T> : null}
         <Btn title="Share text summary" onPress={async () => setMsg(await shareText(text()))} />
-        <Btn title="Copy attendance CSV" kind="ghost" onPress={async () => setMsg(await shareText(attCsv()))} />
-        <Btn title="Copy shop sales CSV" kind="ghost" onPress={async () => setMsg(await shareText(salesCsv()))} />
+        <Btn title="Copy attendance CSV" kind="ghost" onPress={async () => setMsg(await copyText(attCsv()))} />
+        <Btn title="Copy shop sales CSV" kind="ghost" onPress={async () => setMsg(await copyText(salesCsv()))} />
         {Platform.OS === 'web' && <Btn title="Print / save as PDF" kind="ghost" onPress={() => (globalThis as any).print()} />}
       </>)}
     </Screen>
