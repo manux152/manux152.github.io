@@ -4,11 +4,11 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://YOUR-PROJECT-REF.supabase.co/functions/v1/sitemap"
+      "destination": "https://oclvyrdgqamyqzqidfnt.supabase.co/functions/v1/sitemap"
     },
     {
       "source": "/robots.txt",
-      "destination": "https://YOUR-PROJECT-REF.supabase.co/functions/v1/robots"
+      "destination": "https://oclvyrdgqamyqzqidfnt.supabase.co/functions/v1/robots"
     },
     {
       "source": "/(.*)",
@@ -87,5 +87,6 @@
     }
   ]
 }
+
 
 
