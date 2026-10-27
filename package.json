@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
-    "build:web": "node scripts/fetch-seo-settings.js && expo export --platform web && node scripts/fetch-seo-files.js && node scripts/inject-favicon.js",
+    "build:web": "node scripts/fetch-seo-settings.js && expo export --platform web && node scripts/fetch-seo-files.js && node scripts/inject-seo.js && node scripts/inject-favicon.js",
     "build:android": "eas build -p android --profile production",
     "build:ios": "eas build -p ios --profile production",
     "seo:settings": "node scripts/fetch-seo-settings.js",
