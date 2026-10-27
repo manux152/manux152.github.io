@@ -51,7 +51,7 @@ export async function editImage(uri: string, ops: EditOp[], format: 'jpeg' | 'pn
   return { ...cur, mimeType };
 }
 
-export type BrandingFolder = 'hero' | 'logo' | 'favicon' | 'nav' | 'header' | 'footer' | 'sticker';
+export type BrandingFolder = 'hero' | 'logo' | 'favicon' | 'nav' | 'header' | 'footer' | 'sticker' | 'social';
 export const uploadBranding = (folder: BrandingFolder, a: Asset) => uploadAsset(BRANDING_BUCKET, folder, a as any);
 
 /** Best-effort delete of a file we uploaded (ignored if the URL points elsewhere). */

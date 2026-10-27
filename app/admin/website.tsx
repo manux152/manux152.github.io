@@ -5,12 +5,15 @@ import { Pressable } from 'react-native';
 import { Screen, H, T, Card, Btn, Input, Err, Loading } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useApp } from '../../lib/app-context';
+import { SocialIcon } from '../../components/SocialIcon';
+import { checkImageUrl, isWebUrl, pickImages, removeBranding, uploadBranding } from '../../lib/imageTools';
+import type { SocialLink } from '../../lib/socialIcons';
 
 const KEYS = ['site_url', 'hero_title', 'hero_subtitle', 'hero_image_url', 'hero_cta_label', 'hero_cta_route', 'contact_email', 'contact_phone', 'contact_address', 'footer_text'];
 
 export default function WebsiteSettings() {
   const { can, settings, reload } = useApp();
-  const [v, setV] = useState<Record<string, string>>({}); const [social, setSocial] = useState<{ label: string; url: string }[]>([]);
+  const [v, setV] = useState<Record<string, string>>({}); const [social, setSocial] = useState<SocialLink[]>([]); const [iconLink, setIconLink] = useState<Record<number, string>>({}); const [iconBusy, setIconBusy] = useState<number | null>(null);
   const [msg, setMsg] = useState<string | null>(null); const [err, setErr] = useState<string | null>(null); const [busy, setBusy] = useState(false); const [ready, setReady] = useState(false);
   useEffect(() => {
     setV(Object.fromEntries(KEYS.map((k) => [k, typeof settings[k] === 'string' ? settings[k] : ''])));
@@ -26,12 +29,30 @@ export default function WebsiteSettings() {
     for (const s of social) if (s.url && !/^https?:\/\//i.test(s.url)) return setErr(`"${s.label || 'Link'}" must start with https://`);
     if (v.hero_cta_route && !v.hero_cta_route.startsWith('/')) return setErr('The hero button route must start with / (for example /tryouts)');
     setBusy(true);
-    const rows = [...KEYS.map((k) => ({ key: k, value: (v[k] ?? '').trim() })), { key: 'social_links', value: social.filter((s) => s.label.trim() && s.url.trim()).map((s) => ({ label: s.label.trim(), url: s.url.trim() })) }];
+    const rows = [...KEYS.map((k) => ({ key: k, value: (v[k] ?? '').trim() })), { key: 'social_links', value: social.filter((s) => s.label.trim() && s.url.trim()).map((s) => ({ label: s.label.trim(), url: s.url.trim(), ...(s.icon_url ? { icon_url: s.icon_url } : {}) })) }];
     const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
     setBusy(false);
     if (error) return setErr(error.message);
     await reload(); setMsg('Saved. The website and app are updated.');
   };
+  const patch = (i: number, p: Partial<SocialLink>) => setSocial((c) => c.map((y, j) => (j === i ? { ...y, ...p } : y)));
+  const uploadIcon = async (i: number) => {
+    setErr(null); setMsg(null); setIconBusy(i);
+    try {
+      const [a] = await pickImages(1); if (!a) return;
+      if (a.fileSize && a.fileSize > 2 * 1048576) throw new Error('Please choose an icon under 2 MB.');
+      const old = social[i]?.icon_url; patch(i, { icon_url: await uploadBranding('social', a) }); removeBranding(old);
+    } catch (e: any) { setErr(e.message ?? 'Upload failed'); }
+    setIconBusy(null);
+  };
+  const useIconLink = async (i: number) => {
+    setErr(null); setMsg(null); const u = (iconLink[i] ?? '').trim();
+    if (!isWebUrl(u)) return setErr('Paste a full picture link starting with https://');
+    setIconBusy(i); const ok = await checkImageUrl(u); setIconBusy(null);
+    if (!ok) return setErr('That link did not load as a picture. Check the address, or upload the picture instead.');
+    patch(i, { icon_url: u }); setIconLink((c) => ({ ...c, [i]: '' }));
+  };
+  const resetIcon = (i: number) => { removeBranding(social[i]?.icon_url); patch(i, { icon_url: undefined }); };
   const field = (k: string, label: string, extra: any = {}) => <Input key={k} label={label} value={v[k] ?? ''} onChangeText={(x) => set(k, x)} autoCapitalize="none" {...extra} />;
   return (
     <Screen>
@@ -48,7 +69,12 @@ export default function WebsiteSettings() {
           <View key={i} style={{ gap: 6 }}>
             <Input label="Name (e.g. Instagram)" value={s.label} onChangeText={(x) => setSocial(social.map((y, j) => (j === i ? { ...y, label: x } : y)))} />
             <Input label="Link (https://…)" autoCapitalize="none" value={s.url} onChangeText={(x) => setSocial(social.map((y, j) => (j === i ? { ...y, url: x } : y)))} />
-            <Btn title="Remove" kind="ghost" onPress={() => setSocial(social.filter((_, j) => j !== i))} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><SocialIcon link={s} size={22} /><T muted style={{ flex: 1, fontSize: 12 }}>{s.icon_url ? 'Your own icon' : 'Official logo (picked from the name or link)'}</T></View>
+            <Btn title={iconBusy === i ? 'Working…' : 'Upload an icon picture'} kind="ghost" onPress={() => uploadIcon(i)} disabled={iconBusy === i} />
+            <Input label="…or paste an icon picture link (https://…)" autoCapitalize="none" value={iconLink[i] ?? ''} onChangeText={(x) => setIconLink((c) => ({ ...c, [i]: x }))} onSubmitEditing={() => useIconLink(i)} />
+            {(iconLink[i] ?? '').trim() ? <Btn title="Use this link as the icon" kind="ghost" onPress={() => useIconLink(i)} disabled={iconBusy === i} /> : null}
+            {s.icon_url ? <Btn title="Go back to the official logo" kind="ghost" onPress={() => resetIcon(i)} /> : null}
+            <Btn title="Remove this link" kind="ghost" onPress={() => { resetIcon(i); setSocial(social.filter((_, j) => j !== i)); }} />
           </View>))}
         <Btn title="+ Add a link" kind="ghost" onPress={() => setSocial([...social, { label: '', url: '' }])} /></Card>
       <Link href={'/admin/manage/sponsors' as any} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>Sponsors & partners (logos in the footer) →</T></Card></Pressable></Link>

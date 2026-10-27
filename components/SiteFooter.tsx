@@ -8,9 +8,9 @@ import { Logo, safeUrl } from './Logo';
 import { SponsorSlider } from './SponsorSlider';
 import { AdSlot } from './AdSlot';
 import { openCookieSettings } from '../lib/consent';
+import { SocialIcon } from './SocialIcon';
 
 const safe = (u?: string | null) => (u && /^(https?:\/\/|mailto:|tel:)/i.test(u) ? u : null);
-const SOCIAL_ICON: Record<string, string> = { instagram: '📸', facebook: '👍', twitter: '🐦', x: '✖', youtube: '▶', tiktok: '🎵', whatsapp: '💬', linkedin: '💼' };
 
 // Website footer (web only): logo, grouped quick links, contact, social links, sponsors and legal pages.
 // Logo: Admin → Logo & branding. Contact / social / sponsors / info pages: Admin → Website.
@@ -18,7 +18,7 @@ export function SiteFooter() {
   const { settings, pages, sponsors, session } = useApp();
   const { colors, fs, prefs } = useTheme(); const router = useRouter();
   const { width: screenW } = useWindowDimensions(); const narrow = screenW < 720;      // phones: stack everything so nothing runs off the screen
-  const social: { label: string; url: string }[] = Array.isArray(settings.social_links) ? settings.social_links : [];
+  const social: { label: string; url: string; icon_url?: string }[] = Array.isArray(settings.social_links) ? settings.social_links : [];
   const open = (u: string) => Linking.openURL(u);
   const shopOn = settings.shop_enabled !== false;
   const accent = '#9fe0bd';
@@ -63,8 +63,8 @@ export function SiteFooter() {
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
                   {social.filter((x) => safe(x.url)).map((x) => (
                     <Pressable key={x.label} accessibilityRole="link" accessibilityLabel={x.label} onPress={() => open(x.url)}
-                      style={(s: any) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: s.hovered ? '#fff' : colors.footerBorder, backgroundColor: s.hovered ? 'rgba(255,255,255,0.1)' : 'transparent' })}>
-                      <Text style={{ fontSize: fs(14) }}>{SOCIAL_ICON[x.label.trim().toLowerCase()] ?? '🔗'}</Text><Txt>{x.label}</Txt>
+                      style={(s: any) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingLeft: 8, paddingRight: 14, borderRadius: 999, borderWidth: 1, borderColor: s.hovered ? '#fff' : colors.footerBorder, backgroundColor: s.hovered ? 'rgba(255,255,255,0.1)' : 'transparent' })}>
+                      <SocialIcon link={x} size={18} /><Txt>{x.label}</Txt>
                     </Pressable>))}
                 </View>)}
             </View>
