@@ -20,6 +20,7 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { LegalGate } from '../components/LegalGate';
 import { CookieBanner } from '../components/CookieBanner';
 import { StackHeader } from '../components/StackHeader';
+import { IdleLogout, markActive } from '../components/IdleLogout';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -32,6 +33,7 @@ function Inner() {
   usePageViews();
   if (!ready) return <Loading />;
   return (
+    <View style={{ flex: 1 }} onTouchStart={markActive}>
     <LegalGate>
       <Favicon />
       <PwaSetup />
@@ -74,7 +76,9 @@ function Inner() {
       <AssistantFab />
       <CallOverlay />
       <CookieBanner />
+      <IdleLogout />
     </LegalGate>
+    </View>
   );
 }
 function SetupNeeded() {

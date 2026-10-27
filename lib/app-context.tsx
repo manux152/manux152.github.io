@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { needsMfa } from './mfa';
+import { devicePending, loadDeviceGate, setDevicePending } from './device';
 import { supabase, endRevokedSession } from './supabase';
 import { clearOfflineCache } from './offline';
 import { onPullRefresh } from './refresh';
@@ -59,15 +60,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNav((nv ?? []) as NavItem[]);
     setPages((pg ?? []) as Ctx['pages']); setSponsors(((sp ?? []) as any[]).filter((s) => (!s.starts_on || s.starts_on <= today) && (!s.ends_on || s.ends_on >= today)).sort((a, b) => (TIER[a.tier] ?? 4) - (TIER[b.tier] ?? 4)) as Ctx['sponsors']);
     const { data } = await supabase.auth.getSession();
-    const cur = needsMfa(data.session) ? null : data.session;   // password entered but 2FA code still owed → not signed in yet
+    const cur = needsMfa(data.session) || devicePending() ? null : data.session;   // password entered but 2FA code / new-device code still owed → not signed in yet
     setSession(cur);
     await loadPerms(cur);
   }, [loadPerms]);
 
   useEffect(() => onPullRefresh(reload), [reload]);    // pulling a page down also refreshes settings, sponsors and menus
   useEffect(() => {
-    reload().finally(() => setReady(true));
-    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => { if (e === 'SIGNED_OUT') clearOfflineCache(); const cur = needsMfa(s) ? null : s; setSession(cur); loadPerms(cur); });
+    // A sign-in that was abandoned at the new-device code step must not become a signed-in session on the next visit.
+    loadDeviceGate().then(async () => { if (devicePending()) { await supabase.auth.signOut({ scope: 'local' }).catch(() => {}); await setDevicePending(false); } }).then(reload).finally(() => setReady(true));
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => { if (e === 'SIGNED_OUT') clearOfflineCache(); const cur = needsMfa(s) || devicePending() ? null : s; setSession(cur); loadPerms(cur); });
     return () => sub.subscription.unsubscribe();
   }, [reload, loadPerms]);
 

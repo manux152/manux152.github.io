@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
 import { supabase, REVOKED_KEY } from '../lib/supabase';
+import { IDLE_KEY, isDeviceTrusted, sendLoginCode, setDevicePending, verifyLoginCode } from '../lib/device';
 import { useApp } from '../lib/app-context';
 import { passkeysSupported, passkeyError } from '../lib/passkey';
 import { appUrl } from '../lib/redirect';
@@ -13,23 +14,42 @@ const REVOKED_MSG = 'This account has been deactivated or deleted, so you have b
 
 export default function Login() {
   const r = useRouter(); const params = useLocalSearchParams<{ ref?: string }>();
-  const { settings } = useApp();
-  const [mode, setMode] = useState<'in' | 'up' | 'mfa'>(typeof params.ref === 'string' && params.ref ? 'up' : 'in');
+  const { settings, reload } = useApp();
+  const [mode, setMode] = useState<'in' | 'up' | 'mfa' | 'device'>(typeof params.ref === 'string' && params.ref ? 'up' : 'in');
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [name, setName] = useState(''); const [code, setCode] = useState('');
   const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [devCode, setDevCode] = useState('');
   const [factorId, setFactorId] = useState(''); const [otp, setOtp] = useState('');
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const domains: string[] = Array.isArray(settings.allowed_email_domains) ? settings.allowed_email_domains : [];
 
   useEffect(() => { AsyncStorage.getItem(REVOKED_KEY).then((v) => { if (v) { AsyncStorage.removeItem(REVOKED_KEY); setErr(REVOKED_MSG); } }).catch(() => {}); }, []);
+  useEffect(() => { AsyncStorage.getItem(IDLE_KEY).then((v) => { if (v) { AsyncStorage.removeItem(IDLE_KEY); setMsg(`You were signed out after ${v} minutes of inactivity. Please sign in again.`); } }).catch(() => {}); }, []);
   const signIn = async () => {
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); setMsg(null);
+    await setDevicePending(true);   // hold the session back until we know this device is recognised
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) { setBusy(false); setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); return; }
+    if (error) { await setDevicePending(false); setBusy(false); setErr(/banned|deactivated/i.test(error.message) ? REVOKED_MSG : error.message); if (/not confirmed/i.test(error.message)) setNeedsConfirm(true); return; }
+    if (!(await isDeviceTrusted())) { setBusy(false); setDevCode(''); setMode('device'); await sendCode(); return; }   // new device: email a one-time code first
+    await setDevicePending(false); await reload();
     await finishSignIn();
   };
+  const sendCode = async () => {
+    setErr(null); setMsg(null); setBusy(true);
+    const e = await sendLoginCode(); setBusy(false);
+    if (e) return setErr(e);
+    setMsg('We emailed you a 6-digit code. It works for 10 minutes. Check your spam folder too.');
+  };
+  const verifyDevice = async () => {
+    setErr(null); setBusy(true);
+    const res = await verifyLoginCode(devCode);
+    if (!res.ok) { setBusy(false); return setErr(res.message); }
+    await setDevicePending(false); await reload();
+    await finishSignIn();
+  };
+  const cancelDevice = async () => { await supabase.auth.signOut({ scope: 'local' }); await setDevicePending(false); setMode('in'); setPassword(''); setDevCode(''); setErr(null); setMsg(null); };
   // After a password OR biometric sign-in: if this person also turned on 2FA, ask for the 6-digit code before letting them in
   const finishSignIn = async () => {
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -89,6 +109,18 @@ export default function Login() {
     if (error) return setErr(error.message);
     setMsg('Account created. We\'ve emailed you a confirmation link. Open it, then sign in. Check your spam folder too.'); setMode('in'); setNeedsConfirm(true);
   };
+
+  if (mode === 'device') return (
+    <Screen>
+      <H>Verify this device</H>
+      <Card><T muted>You're signing in from a device we don't recognise. For your security we sent a 6-digit code to {email.trim()}. Enter it below and we'll remember this device.</T></Card>
+      <Input label="6-digit code" keyboardType="number-pad" maxLength={7} autoComplete="one-time-code" autoFocus value={devCode} onChangeText={setDevCode} onSubmitEditing={verifyDevice} />
+      <Err msg={err} />{msg ? <T>{msg}</T> : null}
+      <Btn title="Verify and sign in" onPress={verifyDevice} disabled={busy || devCode.replace(/\s/g, '').length < 6} />
+      <Btn title="Send a new code" kind="ghost" onPress={sendCode} disabled={busy} />
+      <Btn title="Cancel" kind="ghost" onPress={cancelDevice} />
+    </Screen>
+  );
 
   if (mode === 'mfa') return (
     <Screen>
