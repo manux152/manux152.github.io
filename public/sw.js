@@ -1,6 +1,6 @@
 // Super Strikers service worker: lets the website open with no signal and installs as an app.
 // It only handles files from this website (never Supabase, payments or video). Change VERSION to clear everything it saved.
-const VERSION = 'ss-v1';
+const VERSION = 'ss-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.add('/')).catch(() => {}));

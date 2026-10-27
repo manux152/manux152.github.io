@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 export const FALLBACK_FONT = 'Arial, Helvetica, sans-serif';
 export const DEFAULT_THEME = {
-  from_name: '', from_address: '', reply_to: '', logo_url: '', google_font: '', font_family: FALLBACK_FONT,
+  from_name: '', from_address: '', reply_to: '', logo_url: '', icon_url: '', google_font: '', font_family: FALLBACK_FONT,
   primary_color: '#0B6E4F', background_color: '#F4F5F7', card_color: '#FFFFFF', text_color: '#222222',
   button_text_color: '#FFFFFF', footer_text: '', radius: 12,
 };
@@ -17,13 +17,15 @@ export const adminClient = () => createClient(Deno.env.get('SUPABASE_URL')!, Den
 export async function loadContext(admin: any): Promise<Ctx> {
   const [{ data: es }, { data: st }] = await Promise.all([
     admin.from('email_settings').select('*').eq('id', 1).maybeSingle(),
-    admin.from('site_settings').select('key,value').in('key', ['team_name', 'site_url', 'logo_url']),
+    admin.from('site_settings').select('key,value').in('key', ['team_name', 'site_url', 'logo_url', 'favicon_url']),
   ]);
   const s: Record<string, any> = Object.fromEntries((st ?? []).map((r: any) => [r.key, r.value]));
   const theme = { ...DEFAULT_THEME, ...(es?.theme ?? {}) } as Theme;
   const team = typeof s.team_name === 'string' && s.team_name ? s.team_name : 'Our team';
   if (!theme.from_name) theme.from_name = team;
   if (!theme.logo_url && typeof s.logo_url === 'string') theme.logo_url = s.logo_url;
+  // The favicon picked in Admin → Favicon is shown in the email header when no logo is set.
+  if (!theme.icon_url && typeof s.favicon_url === 'string') theme.icon_url = s.favicon_url;
   return { theme, team, appUrl: typeof s.site_url === 'string' ? s.site_url : '', enabled: es?.emails_enabled ?? true };
 }
 
@@ -70,7 +72,9 @@ export function renderEmail(tpl: Tpl, vars: Record<string, string>, theme: Theme
 
   const logo = theme.logo_url && httpUrl(theme.logo_url)
     ? `<img src="${esc(theme.logo_url)}" alt="${esc(vars.team ?? '')}" style="max-height:48px;max-width:200px;display:block;">`
-    : `<span style="font-size:22px;font-weight:800;color:${primary};">${esc(vars.team ?? '')}</span>`;
+    : theme.icon_url && httpUrl(theme.icon_url)
+      ? `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding-right:12px;"><img src="${esc(theme.icon_url)}" alt="" width="44" height="44" style="display:block;width:44px;height:44px;border-radius:10px;border:0;"></td><td style="font-size:22px;font-weight:800;color:${primary};font-family:${font};">${esc(vars.team ?? '')}</td></tr></table>`
+      : `<span style="font-size:22px;font-weight:800;color:${primary};">${esc(vars.team ?? '')}</span>`;
   const footerBits = [theme.footer_text ? esc(theme.footer_text).replace(/\n/g, '<br>') : '',
     opts.optOutNote ? 'You can turn off team emails in the app under Account → Team emails.' : ''].filter(Boolean).join('<br><br>');
   const fontLink = /^[A-Za-z0-9 ]+$/.test(theme.google_font || '') && theme.google_font
