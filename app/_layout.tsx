@@ -51,6 +51,9 @@ function Inner() {
         <Stack.Screen name="predictor" options={{ title: t('Predict the score') }} />
         <Stack.Screen name="family" options={{ title: t('My family') }} />
         <Stack.Screen name="rotas" options={{ title: t('Volunteers & lifts') }} />
+        <Stack.Screen name="fans" options={{ title: t('Fan club') }} />
+        <Stack.Screen name="fan-confirm" options={{ title: t('Confirm email') }} />
+        <Stack.Screen name="unsubscribe" options={{ title: t('Unsubscribe') }} />
         <Stack.Screen name="invite" options={{ title: t('Invite friends') }} />
         <Stack.Screen name="formations" options={{ title: t('Formations') }} />
         <Stack.Screen name="product/[slug]" options={{ title: t('Product') }} />

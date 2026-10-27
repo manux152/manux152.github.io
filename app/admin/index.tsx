@@ -37,6 +37,7 @@ export default function AdminHome() {
     ...(can('settings.manage') ? [{ href: '/admin/referrals', title: 'Referrals (invite-a-friend rewards)' }] : []),
     ...(can('development.manage') ? [{ href: '/admin/development', title: 'Player development (ratings, injuries, notes)' }] : []),
     ...(can('lineups.manage') ? [{ href: '/admin/tactics', title: 'Tactics board (team shape, players & tactics)' }] : []),
+    ...(can('newsletters.manage') ? [{ href: '/admin/newsletters', title: 'Newsletters (write & send to fans and members)' }, { href: '/admin/fans', title: 'Fan club (sign-ups)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/security', title: 'Security (auto sign-out, new-device codes)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/nav-appearance', title: 'Navigation look (theme & background)' }, { href: '/admin/favicon', title: 'Favicon (browser tab icon)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/hero', title: 'Hero slider (home page pictures, up to 20)' }, { href: '/admin/branding', title: 'Logo & branding (header and footer logo)' }] : []),

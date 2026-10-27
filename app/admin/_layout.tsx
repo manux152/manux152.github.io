@@ -64,6 +64,8 @@ export default function AdminLayout() {
       <Stack.Screen name="inventory" options={{ title: t('Inventory') }} />
       <Stack.Screen name="tactics" options={{ title: t('Tactics board') }} />
       <Stack.Screen name="nav-appearance" options={{ title: t('Navigation look') }} />
+      <Stack.Screen name="newsletters" options={{ title: t('Newsletters') }} />
+      <Stack.Screen name="fans" options={{ title: t('Fan club') }} />
       <Stack.Screen name="security" options={{ title: t('Security') }} />
       <Stack.Screen name="favicon" options={{ title: t('Favicon') }} />
     </Stack>

@@ -6,7 +6,7 @@ const GROUPS: Record<string, string[]> = {
   'Matches & team': ['coach', 'tactics', 'matches', 'opponents', 'competitions', 'apiProviders', 'seasons', 'events', 'eventTypes', 'trainingSessions', 'awards', 'awardTypes', 'attendance', 'live', 'match-report', 'ratings', 'development', 'kit', 'rotas'],
   Content: ['news', 'media', 'albums', 'announcements', 'pages', 'hero', 'website', 'header-footer', 'sponsors', 'sponsor-report', 'ads', 'ad-report', 'seo', 'seoPages', 'legal', 'legal-evidence', 'polls', 'video'],
   Shop: ['inventory', 'promotions', 'spin', 'orders', 'payments', 'fees', 'products', 'productCategories', 'paymentProviders'],
-  Communication: ['comments', 'referrals', 'assistant', 'chat', 'notifications', 'email-send', 'email-log', 'email-design', 'emailTemplates', 'notificationRules'],
+  Communication: ['newsletters', 'fans', 'comments', 'referrals', 'assistant', 'chat', 'notifications', 'email-send', 'email-log', 'email-design', 'emailTemplates', 'notificationRules'],
   'Site design': ['branding', 'nav-appearance', 'favicon', 'settings', 'nav'],
   'Reports & logs': ['season-report', 'analytics', 'export', 'audit'],
 };
