@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx expo export -p web",
+  "buildCommand": "node scripts/fetch-seo-settings.js && npx expo export -p web",
   "outputDirectory": "dist",
   "rewrites": [
     {
@@ -87,3 +87,5 @@
     }
   ]
 }
+
+
