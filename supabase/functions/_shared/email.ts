@@ -31,7 +31,16 @@ export async function loadContext(admin: any): Promise<Ctx> {
 
 export function commonVars(ctx: Ctx, email: string, name?: string | null): Record<string, string> {
   const nm = (name ?? '').trim();
-  return { team: ctx.team, app_url: ctx.appUrl, email, name: nm || 'there', first_name: nm.split(/\s+/)[0] || 'there' };
+  // Last name is read from the full name on file ("Jane Smith" or "Smith, Jane"). When there isn't one
+  // (blank or single-word name), {Last_Name} falls back to {Name} so greetings never come out empty.
+  const parts = nm.includes(',') ? [nm.split(',')[0].trim()] : nm.split(/\s+/).filter(Boolean);
+  const last = (nm.includes(',') || parts.length > 1) ? parts[nm.includes(',') ? 0 : parts.length - 1] : '';
+  const first = nm.includes(',') ? (nm.split(',')[1] ?? '').trim().split(/\s+/)[0] : parts[0];
+  return {
+    team: ctx.team, app_url: ctx.appUrl, email,
+    name: nm || 'there', first_name: first || nm || 'there',
+    Name: nm || 'there', First_Name: first || nm || 'there', Last_Name: last || nm || 'there',
+  };
 }
 
 export const SAMPLE_VARS: Record<string, string> = {

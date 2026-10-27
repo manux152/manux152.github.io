@@ -70,7 +70,7 @@ export default function EmailSend() {
         ? <Chips options={tpls.map((t) => ({ value: t.event_key, label: t.label }))} value={tplKey} onChange={setTplKey} />
         : <Card>
             <Input label="Subject" value={subject} onChangeText={setSubject} />
-            <Input label="Message — {first_name} {team} work; blank line = new paragraph" multiline value={body} onChangeText={setBody} style={{ minHeight: 120 }} />
+            <Input label="Message — {Last_Name} (falls back to {Name}) {first_name} {team} work; blank line = new paragraph" multiline value={body} onChangeText={setBody} style={{ minHeight: 120 }} />
             <Input label="Button text (optional)" value={btnLabel} onChangeText={setBtnLabel} />
             <Input label="Button link (https://… or {app_url})" autoCapitalize="none" value={btnUrl} onChangeText={setBtnUrl} />
           </Card>}
