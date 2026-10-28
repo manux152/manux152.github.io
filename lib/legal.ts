@@ -51,6 +51,16 @@ export function useLegalStatus() {
     const all = (await fetchDocs(REQUIRED)).sort((a, b) => a.slug.localeCompare(b.slug)).reverse();   // terms first
     if (!all.length) return setStatus('ok');          // documents not set up yet: do not lock everyone out
     setDocs(all);
+    if (uid) {
+      // Signed in: this ACCOUNT must have accepted (at sign-up, or by reading the full terms once). A visitor's quick "I agree" on this device does not count.
+      const acct = await supabase.rpc('legal_needed_account');
+      if (!acct.error && Array.isArray(acct.data)) {
+        setRenewal(false);
+        if (acct.data.length === 0) { await writeLocal(all); return setStatus('ok'); }
+        return setStatus('needed');
+      }
+      // (database update 039 not applied yet: fall back to the older device-based check below)
+    }
     const local = await readLocal();
     if (all.every((d) => local[d.slug] === d.version)) {
       let at = await readAt();
@@ -83,5 +93,5 @@ export function useLegalStatus() {
     await writeLocal(docs); AsyncStorage.setItem(LINKED + (uid ?? ''), docs.map((d) => `${d.slug}${d.version}`).join(',')).catch(() => {});
     setStatus('ok'); return true;
   }, [docs, check, uid]);
-  return { status, docs, accept, error, retry: check, renewal };
+  return { status, docs, accept, error, retry: check, renewal, visitor: !uid };
 }

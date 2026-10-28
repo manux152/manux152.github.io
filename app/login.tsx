@@ -9,6 +9,8 @@ import { passkeysSupported, passkeyError } from '../lib/passkey';
 import { appUrl } from '../lib/redirect';
 import { PasswordChecklist } from '../components/PasswordChecklist';
 import { checkPassword, PASSWORD_ERROR } from '../lib/password';
+import { SignupTerms, type SignupLegal } from '../components/SignupTerms';
+import { deviceInfo, getDeviceId } from '../lib/consent';
 
 const REVOKED_MSG = 'This account has been deactivated or deleted, so you have been signed out. Contact the club if you think this is a mistake.';
 
@@ -20,6 +22,7 @@ export default function Login() {
   const [name, setName] = useState(''); const [code, setCode] = useState('');
   const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [legal, setLegal] = useState<SignupLegal>({ ready: false, docs: [] });
   const [devCode, setDevCode] = useState('');
   const [factorId, setFactorId] = useState(''); const [otp, setOtp] = useState('');
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
@@ -99,12 +102,13 @@ export default function Login() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErr('Enter a valid email address.');
     if (!password) return setErr('Please choose a password.');
     if (!checkPassword(password).valid) return setErr(PASSWORD_ERROR);
+    if (!legal.ready) return setErr('Please read the Terms of Use and Privacy Policy, then tick both boxes to create your account.');
     setBusy(true);
     const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
     if (check === 'code') { setBusy(false); return setErr('That team code is not valid, has already been used, has expired, or is for a different email.'); }
     if (check === 'domain') { setBusy(false); return setErr(`Please use your team email address${domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''}.`); }
     // Created by our own function so the confirmation email always uses the club's template.
-    const { error } = await supabase.functions.invoke('signup', { body: { email: email.trim(), password, full_name: name.trim(), team_code: code.trim(), referral_code: refCode.trim() } });
+    const { error } = await supabase.functions.invoke('signup', { body: { email: email.trim(), password, full_name: name.trim(), team_code: code.trim(), referral_code: refCode.trim(), legal: { device_id: await getDeviceId(), docs: legal.docs, ...deviceInfo() } } });
     setBusy(false);
     if (error) return setErr(error.message);
     setMsg('Account created. We\'ve emailed you a confirmation link. Open it, then sign in. Check your spam folder too.'); setMode('in'); setNeedsConfirm(true);
@@ -146,6 +150,7 @@ export default function Login() {
       {mode === 'up' && <PasswordChecklist password={password} />}
       {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
+      {mode === 'up' && <SignupTerms onChange={setLegal} />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}
       {mode === 'in'
         ? <><Btn title="Sign in" onPress={signIn} disabled={busy} />{passkeysSupported() ? <Btn title="Sign in with Face ID / fingerprint" kind="ghost" onPress={passkeySignIn} disabled={busy} /> : null}<Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
