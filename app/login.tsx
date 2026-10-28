@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, H, T, Card, Input, Btn, Err } from '../components/ui';
@@ -10,6 +11,7 @@ import { appUrl } from '../lib/redirect';
 import { PasswordChecklist } from '../components/PasswordChecklist';
 import { checkPassword, PASSWORD_ERROR } from '../lib/password';
 import { SignupTerms, type SignupLegal } from '../components/SignupTerms';
+import { Turnstile } from '../components/Turnstile';
 import { deviceInfo, getDeviceId } from '../lib/consent';
 
 const REVOKED_MSG = 'This account has been deactivated or deleted, so you have been signed out. Contact the club if you think this is a mistake.';
@@ -23,6 +25,10 @@ export default function Login() {
   const [refCode, setRefCode] = useState(typeof params.ref === 'string' ? params.ref.toUpperCase().slice(0, 12) : '');
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const [legal, setLegal] = useState<SignupLegal>({ ready: false, docs: [] });
+  const [captcha, setCaptcha] = useState(''); const [capKey, setCapKey] = useState(0);
+  const captchaShown = Platform.OS === 'web' && typeof settings.turnstile_site_key === 'string' && settings.turnstile_site_key.trim() !== '';
+  // The server's own message (e.g. "already an account", "too many attempts") is inside the response, not in error.message.
+  const fnError = async (e: any): Promise<string> => { try { const j = await e?.context?.json?.(); if (j?.error) return String(j.error); } catch { /* use the generic text */ } return e?.message ?? 'Something went wrong. Please try again.'; };
   const [devCode, setDevCode] = useState('');
   const [factorId, setFactorId] = useState(''); const [otp, setOtp] = useState('');
   const [err, setErr] = useState<string | null>(null); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
@@ -92,7 +98,7 @@ export default function Login() {
     setBusy(true);
     const { error } = await supabase.functions.invoke('signup', { body: { action: 'resend', email: email.trim() } });
     setBusy(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(await fnError(error));
     setMsg('If that account still needs confirming, we\'ve sent a new link. Use the newest email.');
   };
   const signUp = async () => {
@@ -103,14 +109,14 @@ export default function Login() {
     if (!password) return setErr('Please choose a password.');
     if (!checkPassword(password).valid) return setErr(PASSWORD_ERROR);
     if (!legal.ready) return setErr('Please read the Terms of Use and Privacy Policy, then tick both boxes to create your account.');
+    if (captchaShown && !captcha) return setErr('Please complete the “I am not a robot” check.');
     setBusy(true);
-    const { data: check } = await supabase.rpc('check_signup', { p_email: email.trim(), p_code: code });
-    if (check === 'code') { setBusy(false); return setErr('That team code is not valid, has already been used, has expired, or is for a different email.'); }
-    if (check === 'domain') { setBusy(false); return setErr(`Please use your team email address${domains.length ? ` (${domains.map((d) => '@' + d).join(', ')})` : ''}.`); }
+    // The team code and email rules are checked by the signup function (the code checker is no longer open to the public).
     // Created by our own function so the confirmation email always uses the club's template.
-    const { error } = await supabase.functions.invoke('signup', { body: { email: email.trim(), password, full_name: name.trim(), team_code: code.trim(), referral_code: refCode.trim(), legal: { device_id: await getDeviceId(), docs: legal.docs, ...deviceInfo() } } });
+    const { error } = await supabase.functions.invoke('signup', { body: { email: email.trim(), password, full_name: name.trim(), team_code: code.trim(), referral_code: refCode.trim(), legal: { device_id: await getDeviceId(), docs: legal.docs, ...deviceInfo() }, turnstile_token: captcha } });
     setBusy(false);
-    if (error) return setErr(error.message);
+    setCaptcha(''); setCapKey((k) => k + 1);   // a CAPTCHA token works once: get a fresh check
+    if (error) return setErr(await fnError(error));
     setMsg('Account created. We\'ve emailed you a confirmation link. Open it, then sign in. Check your spam folder too.'); setMode('in'); setNeedsConfirm(true);
   };
 
@@ -151,6 +157,7 @@ export default function Login() {
       {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
       {mode === 'up' && <SignupTerms onChange={setLegal} />}
+      {mode === 'up' && <Turnstile key={capKey} onToken={setCaptcha} />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}
       {mode === 'in'
         ? <><Btn title="Sign in" onPress={signIn} disabled={busy} />{passkeysSupported() ? <Btn title="Sign in with Face ID / fingerprint" kind="ghost" onPress={passkeySignIn} disabled={busy} /> : null}<Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>

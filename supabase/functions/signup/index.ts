@@ -4,6 +4,7 @@
 // Needs:   RESEND_API_KEY secret, sender address in Admin → Email design, public address in Admin → Website (site_url).
 import { passwordOk, PASSWORD_ERROR } from '../_shared/password.ts';
 import { adminClient, commonVars, loadContext, logEmails, renderEmail, sendOne } from '../_shared/email.ts';
+import { allow, clientIp, verifyTurnstile } from '../_shared/guard.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -17,7 +18,17 @@ Deno.serve(async (req) => {
   const email = clean(b.email, 254).toLowerCase();
   if (!EMAIL_RE.test(email)) return json({ error: 'Enter a valid email address.' }, 400);
 
-  const admin = adminClient(); const ctx = await loadContext(admin);
+  // Protection against bots and mass sign-ups: rate limits per address and per email, plus the CAPTCHA for new accounts.
+  const admin = adminClient();
+  const ip = clientIp(req); const resend = b.action === 'resend'; const kind = resend ? 'resend' : 'new';
+  if (!(await allow(admin, `${kind}:ip:${ip}`, resend ? 10 : 5, 3600)) || !(await allow(admin, `${kind}:email:${email}`, resend ? 5 : 3, 3600))) {
+    return json({ error: 'Too many attempts. Please wait a while and try again.' }, 429);
+  }
+  if (!resend) {
+    const cap = await verifyTurnstile(b.turnstile_token, ip);
+    if (!cap.ok) return json({ error: 'Please complete the “I am not a robot” check and try again.' }, 400);
+  }
+  const ctx = await loadContext(admin);
   // The link always points at YOUR site, never at an address supplied by the caller.
   const site = (ctx.appUrl || Deno.env.get('SITE_URL') || '').trim().replace(/\/+$/, '');
   if (!/^https:\/\/[^\s/]+/.test(site)) return json({ error: 'Set the public website address in Admin → Website first. It is used in the confirmation link.' }, 500);
