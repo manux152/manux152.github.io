@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { Screen, H, T, Card, Input, Btn, Chips, Err } from '../components/ui';
 import { supabase } from '../lib/supabase';
 import { useApp } from '../lib/app-context';
+import { Turnstile } from '../components/Turnstile';
 
 const INTERESTS = [{ value: 'news', label: 'Club news' }, { value: 'matches', label: 'Match days & results' }, { value: 'shop', label: 'Shop offers' }, { value: 'events', label: 'Events & tryouts' }];
 
@@ -14,14 +15,19 @@ export default function FanClub() {
   const [name, setName] = useState(profile?.full_name ?? ''); const [email, setEmail] = useState(session?.user.email ?? '');
   const [interests, setInterests] = useState<string[]>(['news', 'matches']);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null); const [done, setDone] = useState(false);
+  const [captcha, setCaptcha] = useState(''); const [capKey, setCapKey] = useState(0);
+  const captchaShown = Platform.OS === 'web' && typeof settings.turnstile_site_key === 'string' && settings.turnstile_site_key.trim() !== '';
+  const fnError = async (e: any): Promise<string> => { try { const j = await e?.context?.json?.(); if (j?.error) return String(j.error); } catch { /* use the generic text */ } return e?.message ?? 'Something went wrong. Please try again.'; };
 
   const join = async () => {
     setErr(null);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErr('Enter a valid email address.');
+    if (captchaShown && !captcha) return setErr('Please complete the “I am not a robot” check.');
     setBusy(true);
-    const { error } = await supabase.functions.invoke('fan-join', { body: { action: 'join', email: email.trim(), full_name: name.trim(), interests } });
+    const { error } = await supabase.functions.invoke('fan-join', { body: { action: 'join', email: email.trim(), full_name: name.trim(), interests, turnstile_token: captcha } });
     setBusy(false);
-    if (error) return setErr(error.message);
+    setCaptcha(''); setCapKey((k) => k + 1);   // a CAPTCHA token works once: get a fresh check
+    if (error) return setErr(await fnError(error));
     setDone(true);
   };
   const perk = (href: string, title: string, sub: string) => (
@@ -44,6 +50,7 @@ export default function FanClub() {
           <Input label="Email" required autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} onSubmitEditing={join} />
           <T style={{ fontWeight: '700' }}>What do you want to hear about?</T>
           <Chips multi options={INTERESTS} value={interests} onChange={(v: string[]) => setInterests(v)} />
+          <Turnstile key={capKey} onToken={setCaptcha} />
           <Err msg={err} />
           <Btn title={busy ? 'Joining…' : 'Join the fan club'} onPress={join} disabled={busy} />
           <T muted style={{ fontSize: 12 }}>By joining you agree to get emails from {team}. Every email has an unsubscribe link.</T>

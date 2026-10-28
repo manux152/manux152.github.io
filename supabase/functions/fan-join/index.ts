@@ -1,7 +1,9 @@
 // Deploy: supabase functions deploy fan-join
+// Protected with Cloudflare Turnstile (join only) and rate limits. Needs TURNSTILE_SECRET_KEY and migration 040 (rate_limit_hit).
 // Public fan club sign-up: join (sends a confirmation email), confirm (from the email link), unsubscribe (from any newsletter).
 // Needs the website address in site settings (site_url) and the email setup from Admin → Email design.
 import { adminClient, commonVars, loadContext, logEmails, renderEmail, sendOne, type Tpl } from '../_shared/email.ts';
+import { allow, clientIp, verifyTurnstile } from '../_shared/guard.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -12,7 +14,13 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   const body = await req.json().catch(() => ({}));
   const admin = adminClient();
+  const ip = clientIp(req);
   const token = typeof body.token === 'string' ? body.token.replace(/[^a-f0-9]/gi, '').slice(0, 80) : '';
+
+  // Link clicks (confirm / unsubscribe): a generous limit per address, only to stop people guessing tokens.
+  if ((body.action === 'confirm' || body.action === 'unsubscribe') && !(await allow(admin, `fanlink:ip:${ip}`, 60, 3600))) {
+    return json({ error: 'Too many attempts. Please wait a while and try again.' }, 429);
+  }
 
   if (body.action === 'confirm') {
     if (token.length < 32) return json({ error: 'This link is not valid.' }, 400);
@@ -34,6 +42,14 @@ Deno.serve(async (req) => {
   const email = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
   const name = String(body.full_name ?? '').trim().slice(0, 120) || null;
   if (!EMAIL_RE.test(email)) return json({ error: 'Enter a valid email address.' }, 400);
+
+  // Protection against bots and mail-bombing: limits per address and per email, then the CAPTCHA.
+  if (!(await allow(admin, `fanjoin:ip:${ip}`, 5, 3600)) || !(await allow(admin, `fanjoin:email:${email}`, 3, 3600))) {
+    return json({ error: 'Too many attempts. Please wait a while and try again.' }, 429);
+  }
+  const cap = await verifyTurnstile(body.turnstile_token, ip);
+  if (!cap.ok) return json({ error: 'Please complete the “I am not a robot” check and try again.' }, 400);
+
   const interests = (Array.isArray(body.interests) ? body.interests : []).filter((i: unknown) => typeof i === 'string' && INTERESTS.includes(i)).slice(0, 4);
   const reply = { ok: true };   // same answer whether or not the address was already known, so nobody can probe the list
 
