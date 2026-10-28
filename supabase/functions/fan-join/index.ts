@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   if (!(await allow(admin, `fanjoin:ip:${ip}`, 5, 3600)) || !(await allow(admin, `fanjoin:email:${email}`, 3, 3600))) {
     return json({ error: 'Too many attempts. Please wait a while and try again.' }, 429);
   }
-  const cap = await verifyTurnstile(body.turnstile_token, ip);
+  const cap = await verifyTurnstile(body.turnstile_token, ip, 'fan_join');
   if (!cap.ok) return json({ error: 'Please complete the “I am not a robot” check and try again.' }, 400);
 
   const interests = (Array.isArray(body.interests) ? body.interests : []).filter((i: unknown) => typeof i === 'string' && INTERESTS.includes(i)).slice(0, 4);

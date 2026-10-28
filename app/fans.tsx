@@ -50,7 +50,7 @@ export default function FanClub() {
           <Input label="Email" required autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} onSubmitEditing={join} />
           <T style={{ fontWeight: '700' }}>What do you want to hear about?</T>
           <Chips multi options={INTERESTS} value={interests} onChange={(v: string[]) => setInterests(v)} />
-          <Turnstile key={capKey} onToken={setCaptcha} />
+          <Turnstile key={capKey} onToken={setCaptcha} action="fan_join" />
           <Err msg={err} />
           <Btn title={busy ? 'Joining…' : 'Join the fan club'} onPress={join} disabled={busy} />
           <T muted style={{ fontSize: 12 }}>By joining you agree to get emails from {team}. Every email has an unsubscribe link.</T>

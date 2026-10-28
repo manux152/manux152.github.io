@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Too many attempts. Please wait a while and try again.' }, 429);
   }
   if (!resend) {
-    const cap = await verifyTurnstile(b.turnstile_token, ip);
+    const cap = await verifyTurnstile(b.turnstile_token, ip, 'signup');
     if (!cap.ok) return json({ error: 'Please complete the “I am not a robot” check and try again.' }, 400);
   }
   const ctx = await loadContext(admin);

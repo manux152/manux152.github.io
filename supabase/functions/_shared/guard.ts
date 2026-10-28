@@ -6,7 +6,7 @@ export const clientIp = (req: Request): string =>
   (req.headers.get('cf-connecting-ip') ?? (req.headers.get('x-forwarded-for') ?? '').split(',')[0] ?? '').trim().slice(0, 64) || 'unknown';
 
 /** Checks the CAPTCHA token with Cloudflare. If no secret is configured yet, it lets the request through (and logs a warning) so nothing breaks while you set it up. */
-export async function verifyTurnstile(token: unknown, ip: string): Promise<{ ok: boolean; skipped?: boolean }> {
+export async function verifyTurnstile(token: unknown, ip: string, action?: string): Promise<{ ok: boolean; skipped?: boolean }> {
   const secret = Deno.env.get('TURNSTILE_SECRET_KEY');
   if (!secret) { console.warn('TURNSTILE_SECRET_KEY is not set: the CAPTCHA is NOT being enforced'); return { ok: true, skipped: true }; }
   const t = String(token ?? '').slice(0, 2048);
@@ -16,7 +16,12 @@ export async function verifyTurnstile(token: unknown, ip: string): Promise<{ ok:
     if (ip && ip !== 'unknown') body.set('remoteip', ip);
     const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
     const j = await r.json();
-    return { ok: j?.success === true };
+    if (j?.success !== true) return { ok: false };
+    // The token must come from the right form (action) and from your own website (hostname), so a token from another site or form is refused.
+    if (action && j.action !== action) { console.warn(`Turnstile action mismatch: expected ${action}, got ${j.action}`); return { ok: false }; }
+    const hosts = (Deno.env.get('TURNSTILE_HOSTNAMES') ?? '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+    if (hosts.length && !hosts.includes(String(j.hostname ?? '').toLowerCase())) { console.warn(`Turnstile hostname not allowed: ${j.hostname}`); return { ok: false }; }
+    return { ok: true };
   } catch (e) { console.error('Turnstile verification failed:', e); return { ok: false }; }
 }
 

@@ -24,7 +24,7 @@ function load(): Promise<void> {
  * with no key set, nothing is shown. Calls onToken with the one-time token (or '' when it expires or fails).
  * A token works once, so give the component a new `key` after each submit to get a fresh check.
  */
-export function Turnstile({ onToken }: { onToken: (t: string) => void }) {
+export function Turnstile({ onToken, action }: { onToken: (t: string) => void; action?: string }) {
   const { settings } = useApp(); const { isDark } = useTheme();
   const siteKey = typeof settings.turnstile_site_key === 'string' ? settings.turnstile_site_key.trim() : '';
   const box = useRef<any>(null); const widget = useRef<any>(null);
@@ -34,7 +34,7 @@ export function Turnstile({ onToken }: { onToken: (t: string) => void }) {
     load().then(() => {
       if (dead || !box.current) return;
       widget.current = (globalThis as any).turnstile.render(box.current, {
-        sitekey: siteKey, theme: isDark ? 'dark' : 'light',
+        sitekey: siteKey, action, theme: isDark ? 'dark' : 'light',
         callback: (t: string) => onToken(t), 'expired-callback': () => onToken(''), 'error-callback': () => onToken(''),
       });
     }).catch(() => onToken(''));

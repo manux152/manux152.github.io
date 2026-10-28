@@ -157,7 +157,7 @@ export default function Login() {
       {mode === 'up' && <Input label="Team code" autoCapitalize="characters" autoCorrect={false} value={code} onChangeText={setCode} placeholder="e.g. SS-ABCD-EFGH" />}
       {mode === 'up' && settings.referral_enabled !== false && <Input label="Friend's invite code (optional)" autoCapitalize="characters" autoCorrect={false} value={refCode} onChangeText={setRefCode} />}
       {mode === 'up' && <SignupTerms onChange={setLegal} />}
-      {mode === 'up' && <Turnstile key={capKey} onToken={setCaptcha} />}
+      {mode === 'up' && <Turnstile key={capKey} onToken={setCaptcha} action="signup" />}
       <Err msg={err} />{msg ? <T>{msg}</T> : null}
       {mode === 'in'
         ? <><Btn title="Sign in" onPress={signIn} disabled={busy} />{passkeysSupported() ? <Btn title="Sign in with Face ID / fingerprint" kind="ghost" onPress={passkeySignIn} disabled={busy} /> : null}<Btn title="I have a team code — create account" kind="ghost" onPress={() => { setMode('up'); setErr(null); }} />{needsConfirm ? <Btn title="Resend confirmation email" kind="ghost" onPress={resendConfirm} disabled={busy} /> : null}<Btn title="Forgot password?" kind="ghost" onPress={forgot} /><Btn title="See tryouts" kind="ghost" onPress={() => r.push('/tryouts')} /></>
