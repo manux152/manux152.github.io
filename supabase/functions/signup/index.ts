@@ -68,6 +68,10 @@ Deno.serve(async (req) => {
 
   if (!full_name) return json({ error: 'Please enter your full name.' }, 400);
 
+  // One account per email: upper/lower case, "+tags" and (for Gmail) dots count as the same address.
+  const inUse = { error: 'There is already an account for that email. Sign in, or use “Forgot password?”.' };
+  if ((await admin.rpc('email_in_use', { p_email: email })).data === true) return json(inUse, 400);
+
   const { data: check } = await admin.rpc('check_signup', { p_email: email, p_code: team_code });
   if (check === 'code') return json({ error: 'That team code is not valid, has already been used, has expired, or is for a different email.' }, 400);
   if (check === 'domain') return json({ error: 'Please use your team email address.' }, 400);
@@ -83,7 +87,8 @@ Deno.serve(async (req) => {
   const { data: link, error } = await admin.auth.admin.generateLink({ type: 'signup', email, password, options: { data: { team_code, full_name, referral_code } } });
   if (error || !link?.properties?.hashed_token) {
     const m = String(error?.message ?? '');
-    if (/already|registered|exists/i.test(m)) return json({ error: 'There is already an account for that email. Sign in, or use “Forgot password?”.' }, 400);
+    if (/already|registered|exists/i.test(m)) return json(inUse, 400);
+    if (/database error/i.test(m) && (await admin.rpc('email_in_use', { p_email: email })).data === true) return json(inUse, 400);   // two sign-ups at the same moment
     return json({ error: m || 'Could not create the account.' }, 400);
   }
   // Save the acceptance against the new account (version, time, device, address) as evidence.
