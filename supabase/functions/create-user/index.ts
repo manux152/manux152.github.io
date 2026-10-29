@@ -27,13 +27,20 @@ Deno.serve(async (req) => {
       if ((rl ?? []).some((r: any) => !(r.level < Number(myLevel) || top === true))) return json({ error: 'You can only give roles below your own level.' }, 403);
     }
   }
+  // One account per email: capital letters, "+tags" and (for Gmail) dots count as the same address.
+  const inUse = 'There is already an account for that email. (The same address with different capital letters, dots or a + tag counts as the same.)';
+  if ((await admin.rpc('email_in_use', { p_email: String(email) })).data === true) return json({ error: inUse }, 400);
   // Admin-created accounts pass through the sign-up rules with a short-lived, email-locked, role-less code
   const code = ('ADMIN-' + crypto.randomUUID()).toUpperCase();   // the sign-up rule compares codes in UPPER case
   const { error: ce } = await admin.from('team_codes').insert({ code, email: String(email).toLowerCase(), bypass_domain: true, assign_role: false,
     expires_at: new Date(Date.now() + 10 * 60000).toISOString(), note: 'Created by an admin' });
   if (ce) return json({ error: 'Could not prepare the account: ' + ce.message }, 400);
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name, team_code: code } });
-  if (error) { await admin.from('team_codes').delete().eq('code', code); return json({ error: error.message }, 400); }
+  if (error) {
+    await admin.from('team_codes').delete().eq('code', code);
+    const dup = /already|registered|exists/i.test(error.message) || (/database error/i.test(error.message) && (await admin.rpc('email_in_use', { p_email: String(email) })).data === true);
+    return json({ error: dup ? inUse : error.message }, 400);
+  }
   if (role_ids?.length) {
     const { error: e2 } = await admin.from('user_roles').insert(role_ids.map((role_id: string) => ({ user_id: data.user.id, role_id })));
     if (e2) return json({ error: e2.message }, 400);
