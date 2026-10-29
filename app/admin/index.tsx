@@ -41,6 +41,7 @@ export default function AdminHome() {
     ...(can('settings.manage') ? [{ href: '/admin/security', title: 'Security (auto sign-out, new-device codes)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/nav-appearance', title: 'Navigation look (theme & background)' }, { href: '/admin/favicon', title: 'Favicon (browser tab icon)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/hero', title: 'Hero slider (home page pictures, up to 20)' }, { href: '/admin/branding', title: 'Logo & branding (header and footer logo)' }] : []),
+    ...(can('settings.manage') ? [{ href: '/admin/about', title: 'About us (mission, vision, value proposition, leadership)' }] : []),
     ...(can('reports.view') ? [{ href: '/admin/season-report', title: 'Season report (attendance, awards, scorers, shop sales)' }] : []),
     ...(can('payments.manage') ? [{ href: '/admin/payments', title: 'Payments (online, refunds, connections)' }] : []),
     ...(can('orders.manage') ? [{ href: '/admin/orders', title: 'Shop orders' }] : []),

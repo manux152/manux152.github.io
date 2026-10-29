@@ -158,6 +158,10 @@ const ROWS: [string, string, string, string, string][] = [
   ['Goal', 'But', 'Gol', 'Golo', 'Bao'], ['Chance', 'Occasion', 'Ocasión', 'Oportunidade', 'Nafasi'], ['Save (goalkeeper)', 'Arrêt', 'Parada', 'Defesa', 'Okoa'],
   ['Tackle', 'Tacle', 'Entrada', 'Desarme', 'Kukaba'], ['Assist', 'Passe décisive', 'Asistencia', 'Assistência', 'Pasi ya bao'], ['Skill', 'Geste technique', 'Habilidad', 'Técnica', 'Ujuzi'],
   ['Card', 'Carton', 'Tarjeta', 'Cartão', 'Kadi'], ['Mistake', 'Erreur', 'Error', 'Erro', 'Kosa'], ['Other', 'Autre', 'Otro', 'Outro', 'Nyingine'],
+  // about us
+  ['About us', 'À propos de nous', 'Sobre nosotros', 'Sobre nós', 'Kuhusu sisi'], ['Our mission', 'Notre mission', 'Nuestra misión', 'A nossa missão', 'Dhamira yetu'],
+  ['Our vision', 'Notre vision', 'Nuestra visión', 'A nossa visão', 'Maono yetu'], ['Our value proposition', 'Notre proposition de valeur', 'Nuestra propuesta de valor', 'A nossa proposta de valor', 'Pendekezo letu la thamani'],
+  ['Our leadership', 'Notre direction', 'Nuestro liderazgo', 'A nossa liderança', 'Uongozi wetu'],
 ];
 const IDX: Record<Exclude<Lang, 'en'>, number> = { fr: 1, es: 2, pt: 3, sw: 4 };
 export const DICT: Record<string, Partial<Record<Lang, string>>> = {};
