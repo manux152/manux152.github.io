@@ -37,7 +37,8 @@ async function record(docs: LegalDoc[]) {
 
 export type LegalStatus = 'checking' | 'ok' | 'needed';
 /**
- * Decides whether this person must read and accept the Terms and Privacy Policy before continuing.
+ * Decides whether a SIGNED-IN person must read and accept the Terms and Privacy Policy before continuing. Visitors without an account are never asked:
+ * new accounts accept at sign-up (saved by the signup function), and older accounts are asked once at their next sign-in.
  * They must accept again whenever a new version is published, and again after the re-accept period set in Admin (default 90 days). Acceptance is saved to the database as evidence.
  */
 export function useLegalStatus() {
@@ -48,11 +49,12 @@ export function useLegalStatus() {
 
   const check = useCallback(async () => {
     if (!enabled || isCrawler()) return setStatus('ok');
+    if (!uid) return setStatus('ok');   // visitors browse freely: the Terms and Privacy Policy are read and accepted when an account is created
     const all = (await fetchDocs(REQUIRED)).sort((a, b) => a.slug.localeCompare(b.slug)).reverse();   // terms first
     if (!all.length) return setStatus('ok');          // documents not set up yet: do not lock everyone out
     setDocs(all);
     if (uid) {
-      // Signed in: this ACCOUNT must have accepted (at sign-up, or by reading the full terms once). A visitor's quick "I agree" on this device does not count.
+      // Signed in: this ACCOUNT must have accepted (at sign-up, or by reading the full terms once).
       const acct = await supabase.rpc('legal_needed_account');
       if (!acct.error && Array.isArray(acct.data)) {
         setRenewal(false);
@@ -93,5 +95,5 @@ export function useLegalStatus() {
     await writeLocal(docs); AsyncStorage.setItem(LINKED + (uid ?? ''), docs.map((d) => `${d.slug}${d.version}`).join(',')).catch(() => {});
     setStatus('ok'); return true;
   }, [docs, check, uid]);
-  return { status, docs, accept, error, retry: check, renewal, visitor: !uid };
+  return { status, docs, accept, error, retry: check, renewal };
 }

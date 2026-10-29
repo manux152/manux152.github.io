@@ -4,7 +4,6 @@ import { TrText as Text } from './TrText';
 import { Btn, Loading } from './ui';
 import { Logo } from './Logo';
 import { LegalMeta, LegalSections } from './LegalSections';
-import { VisitorNotice } from './VisitorNotice';
 import { useApp } from '../lib/app-context';
 import { useTheme } from '../lib/theme';
 import { useLegalStatus } from '../lib/legal';
@@ -15,7 +14,7 @@ import { useLegalStatus } from '../lib/legal';
  * It returns each time a new version is published.
  */
 export function LegalGate({ children }: { children: React.ReactNode }) {
-  const { status, docs, accept, error, renewal, visitor } = useLegalStatus();
+  const { status, docs, accept, error, renewal } = useLegalStatus();
   const { settings } = useApp(); const { colors, fs } = useTheme();
   const [tab, setTab] = useState(0);
   const [opened, setOpened] = useState<Record<string, Set<number>>>({});
@@ -23,7 +22,6 @@ export function LegalGate({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   if (status === 'ok') return <>{children}</>;
   if (status === 'checking') return <Loading />;
-  if (visitor) return <VisitorNotice docs={docs} accept={accept} error={error} />;   // not signed in: short notice. Signed-in people read the full documents below.
 
   const vars = { team: typeof settings.team_name === 'string' ? settings.team_name : '', email: typeof settings.legal_contact_email === 'string' ? settings.legal_contact_email : '' };
   const color = settings.primary_color ?? '#0B6E4F';
