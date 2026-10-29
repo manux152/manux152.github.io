@@ -20,6 +20,7 @@ import { fetchPolls, type Poll } from '../../lib/fans';
 import { useLiveMatch, useAutoClock, useTick, eventIcon, matchTitle, matchScoreLine } from '../../lib/matchday';
 import { MatchTeams } from '../../components/MatchTeams';
 import { PreMatchCard } from '../../components/PreMatchCard';
+import { HeadToHeadCard } from '../../components/HeadToHead';
 import { shareCardImage } from '../../lib/shareCard';
 
 export default function MatchDetail() {
@@ -65,6 +66,7 @@ export default function MatchDetail() {
           {p.rationale ? <T>{p.rationale}</T> : null}
           <T muted style={{ fontSize: 12 }}>An estimate from past results ({p.basis}). Not a guarantee — football is unpredictable.</T>
         </Card>); })() : null}
+      {x.status !== 'cancelled' ? <HeadToHeadCard opponentId={x.opponent_id ?? x.opponents?.id} name={x.opponents?.name} /> : null}
       {(x.status === 'scheduled' || x.status === 'live') && <AvailabilityCard matchId={x.id} />}
       <FanPredictCard match={x} />
       {polls.map((pl) => <PollCard key={pl.id} poll={pl} />)}
