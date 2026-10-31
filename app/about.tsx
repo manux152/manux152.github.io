@@ -1,6 +1,7 @@
-import { useWindowDimensions, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { Screen, H, T, Card, Loading } from '../components/ui';
+import { Screen, H, T, Card, Loading, useAccent } from '../components/ui';
 import { useTable } from '../lib/useQuery';
 import { useLayout } from '../lib/layout';
 
@@ -12,7 +13,7 @@ const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((
 export default function About() {
   const sections = useTable('about_sections', (q) => q.eq('is_visible', true).order('sort_order'));
   const leaders = useTable('about_leaders', (q) => q.eq('is_visible', true).order('sort_order').order('created_at'));
-  const { width } = useWindowDimensions(); const { maxWidth } = useLayout();
+  const { width } = useWindowDimensions(); const { maxWidth } = useLayout(); const router = useRouter(); const accent = useAccent();
   if (sections.loading || leaders.loading) return <Loading />;
   if (sections.error) return <Screen><H>About us</H><T muted>This page is not available right now. Please try again later.</T></Screen>;
 
@@ -39,7 +40,8 @@ export default function About() {
         <H>Our leadership</H>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
           {people.map((p) => (
-            <Card key={p.id} style={{ width: cardW }}>
+            <Pressable key={p.id} accessibilityRole="link" accessibilityLabel={p.full_name} onPress={() => router.push(`/leader/${p.id}` as any)} style={{ width: cardW }}>
+            <Card style={{ flex: 1 }}>
               <View style={{ width: photo, height: photo, borderRadius: 12, overflow: 'hidden', backgroundColor: '#E6E8EC', alignItems: 'center', justifyContent: 'center' }}>
                 {p.photo_url
                   ? <Image source={{ uri: p.photo_url }} style={{ width: photo, height: photo }} contentFit="cover" accessibilityLabel={p.full_name} />
@@ -47,8 +49,10 @@ export default function About() {
               </View>
               <T raw style={{ fontWeight: '800' }}>{p.full_name}</T>
               {p.role_title ? <T muted style={{ fontWeight: '600' }}>{p.role_title}</T> : null}
-              {p.bio ? <T style={{ fontSize: 13, lineHeight: 19 }}>{p.bio}</T> : null}
+              {p.bio ? <T numberOfLines={3} style={{ fontSize: 13, lineHeight: 19 }}>{p.bio}</T> : null}
+              <T style={{ fontSize: 13, fontWeight: '700', color: accent, marginTop: 'auto' }}>View profile →</T>
             </Card>
+            </Pressable>
           ))}
         </View>
       </> : null}

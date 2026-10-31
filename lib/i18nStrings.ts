@@ -162,6 +162,8 @@ const ROWS: [string, string, string, string, string][] = [
   ['About us', 'À propos de nous', 'Sobre nosotros', 'Sobre nós', 'Kuhusu sisi'], ['Our mission', 'Notre mission', 'Nuestra misión', 'A nossa missão', 'Dhamira yetu'],
   ['Our vision', 'Notre vision', 'Nuestra visión', 'A nossa visão', 'Maono yetu'], ['Our value proposition', 'Notre proposition de valeur', 'Nuestra propuesta de valor', 'A nossa proposta de valor', 'Pendekezo letu la thamani'],
   ['Our leadership', 'Notre direction', 'Nuestro liderazgo', 'A nossa liderança', 'Uongozi wetu'],
+  ['View profile →', 'Voir le profil →', 'Ver perfil →', 'Ver perfil →', 'Tazama wasifu →'], ['Send a message', 'Envoyer un message', 'Enviar un mensaje', 'Enviar uma mensagem', 'Tuma ujumbe'],
+  ['Sign in to send a message', 'Connectez-vous pour envoyer un message', 'Inicia sesión para enviar un mensaje', 'Entre para enviar uma mensagem', 'Ingia ili utume ujumbe'], ['Leader', 'Responsable', 'Líder', 'Líder', 'Kiongozi'],
 ];
 const IDX: Record<Exclude<Lang, 'en'>, number> = { fr: 1, es: 2, pt: 3, sw: 4 };
 export const DICT: Record<string, Partial<Record<Lang, string>>> = {};
