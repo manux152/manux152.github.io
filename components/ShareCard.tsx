@@ -10,6 +10,22 @@ type Props = { variant: 'result' | 'fixture' | 'lineup'; match: any; scorers?: s
 
 // The picture is captured from the screen, and the capture drops pictures that are still web links.
 // So each logo is fetched first and drawn from its own data, which always makes it into the shared image.
+// Big logo files shrunk in one jump look jagged. On the web we shrink them in smooth half-steps to a size that suits the card.
+async function smoothScale(blob: Blob, max: number): Promise<string | null> {
+  const g: any = globalThis;
+  if (typeof g.document === 'undefined' || !g.URL?.createObjectURL) return null;
+  const href = g.URL.createObjectURL(blob);
+  try {
+    const img: any = await new Promise((res, rej) => { const i = new g.Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('img')); i.src = href; });
+    const w: number = img.naturalWidth, h: number = img.naturalHeight; if (!w || !h) return null;
+    const k = Math.min(1, max / Math.max(w, h)); const tw = Math.max(1, Math.round(w * k)), th = Math.max(1, Math.round(h * k));
+    const draw = (from: any, tw2: number, th2: number) => { const c = g.document.createElement('canvas'); c.width = tw2; c.height = th2; const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(from, 0, 0, tw2, th2); return c; };
+    let cur: any = img, cw = w, ch = h;
+    while (cw / 2 > tw) { cw = Math.round(cw / 2); ch = Math.round(ch / 2); cur = draw(cur, cw, ch); }
+    return draw(cur, tw, th).toDataURL('image/png');
+  } catch { return null; } finally { g.URL.revokeObjectURL(href); }
+}
+
 function useInlineImage(url: string | null) {
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
@@ -18,7 +34,7 @@ function useInlineImage(url: string | null) {
     (async () => {
       try {
         const blob = await (await fetch(url)).blob();
-        const data = await new Promise<string>((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(new Error('read')); f.readAsDataURL(blob); });
+        const data = (await smoothScale(blob, 384)) ?? await new Promise<string>((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(new Error('read')); f.readAsDataURL(blob); });
         if (!off) setSrc(data);
       } catch { if (!off) setSrc(url); }
     })();
