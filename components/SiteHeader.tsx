@@ -15,7 +15,7 @@ import { NavBackground } from './NavBackground';
 import { Avatar, T } from './ui';
 import { PromoStrip } from './PromoStrip';
 import { GroupedMenu } from './GroupedMenu';
-import { buildMenuGroups } from '../lib/menuGroups';
+import { buildAccountGroups, buildMenuGroups } from '../lib/menuGroups';
 import { useChatUnread } from '../lib/chat';
 
 // Classic masthead: logo and quick links on top, a ruled main-menu row underneath (wide screens);
@@ -147,12 +147,7 @@ export function SiteHeader() {
           <Avatar url={profile?.avatar_url} name={initialName} size={72} />
           <T muted style={{ fontSize: 13 }}>{session?.user.email}</T>
         </View>
-        {row('My account', '/account')}{row('Edit profile & photo', '/profile')}
-        {chatOn ? row(`Messages${unread > 0 ? ` (${unread})` : ''}`, '/chat') : null}
-        {row('Ask the assistant', '/assistant')}
-        {shopOn ? row('My orders', '/orders') : null}
-        {shopOn && settings.spin_enabled !== false ? row('Spin the wheel', '/spin') : null}
-        {row('Dashboard', '/dashboard')}{row('Settings', '/settings')}
+        <GroupedMenu home={null} groups={buildAccountGroups({ chatOn, unread, shopOn, spinOn: shopOn && settings.spin_enabled !== false })} onGo={go} active={active} />
         {can('admin.access') ? row('Admin panel', '/admin') : null}
         <Pressable accessibilityRole="button" onPress={async () => { setMenu(null); await signOut(); router.replace('/'); }} style={{ paddingVertical: 12, paddingHorizontal: 8 }}><T style={{ fontWeight: '700', color: colors.danger }}>Sign out</T></Pressable>
       </>) : null}

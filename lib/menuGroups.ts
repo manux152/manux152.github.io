@@ -30,3 +30,15 @@ export function buildMenuGroups(o: {
   if (o.isAdmin) add('Account', 'Admin', '/admin');
   return { home, groups: GROUP_ORDER.filter((k) => g[k]?.length).map((k) => ({ key: k, items: g[k] })) };
 }
+
+// Profile-picture menu: the same expandable look, with groups for the signed-in person.
+export function buildAccountGroups(o: { chatOn: boolean; unread: number; shopOn: boolean; spinOn: boolean }): MenuGroup[] {
+  const account: MenuItem[] = [{ label: 'My account', href: '/account' }, { label: 'Edit profile & photo', href: '/profile' }];
+  if (o.shopOn) account.push({ label: 'My orders', href: '/orders' });
+  account.push({ label: 'Settings', href: '/settings' });
+  const activity: MenuItem[] = [{ label: 'Dashboard', href: '/dashboard' }];
+  if (o.chatOn) activity.push({ label: 'Messages', href: '/chat', badge: o.unread });
+  activity.push({ label: 'Ask the assistant', href: '/assistant' });
+  if (o.spinOn) activity.push({ label: 'Spin the wheel', href: '/spin' });
+  return [{ key: 'Account', items: account }, { key: 'Activity', items: activity }];
+}
