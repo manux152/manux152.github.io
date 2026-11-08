@@ -32,6 +32,7 @@ export default function AdminHome() {
     ...(can('rotas.manage') ? [{ href: '/admin/rotas', title: 'Rotas (volunteers and transport)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/seo', title: 'Search visibility (SEO: get found on Google)' }, { href: '/admin/legal', title: 'Legal documents (Terms, Privacy, Cookies)' }, { href: '/admin/legal-evidence', title: 'Acceptance & consent records' }, { href: '/admin/manage/ads', title: 'Ads (place, schedule & rotate adverts)' }, { href: '/admin/ad-report', title: 'Ad report (views and clicks)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/sponsor-report', title: 'Sponsor report (views and clicks)' }] : []),
+    ...(can('matches.manage') ? [{ href: '/admin/friendlies', title: 'Friendly requests (teams asking for a match)' }] : []),
     ...(can('news.manage') ? [{ href: '/admin/polls', title: 'Polls (ask fans a question)' }] : []),
     ...(can('comments.moderate') ? [{ href: '/admin/comments', title: 'Comments (approve, hide, report queue)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/referrals', title: 'Referrals (invite-a-friend rewards)' }] : []),

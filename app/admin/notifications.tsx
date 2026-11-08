@@ -22,6 +22,12 @@ export default function Notifications() {
     if (error) return setErr(error.message);
     setOk(`${data} reminder(s) queued.`); await queue.refresh();
   };
+  const runEmailReminders = async () => {
+    setErr(null); setOk(null);
+    const { data, error } = await supabase.rpc('run_match_email_reminders');
+    if (error) return setErr(error.message);
+    setOk(`${data} match(es) had reminder emails queued.`);
+  };
   const send = async () => {
     setErr(null); setOk(null);
     if (!title.trim()) return setErr('Title is required');
@@ -49,6 +55,8 @@ export default function Notifications() {
         <Btn title={busy ? 'Sending…' : 'Send now'} onPress={send} disabled={busy} /></Card>
       <Card><T style={{ fontWeight: '700' }}>Match reminders</T><T muted>Sent automatically before each match (see README). Use this to run the check now.</T>
         <Btn title="Send due reminders now" kind="ghost" onPress={runReminders} /></Card>
+      <Card><T style={{ fontWeight: '700' }}>Match reminder emails</T><T muted>The team is emailed automatically before each scheduled match (24 hours before by default, checked every 15 minutes). Edit the wording in Admin → Emails (“Match reminder”) and the timing with the site setting match_email_reminder_hours, e.g. [24,2]. Use this to run the check now.</T>
+        <Btn title="Send due reminder emails now" kind="ghost" onPress={runEmailReminders} /></Card>
       <Link href="/admin/manage/notificationRules" asChild><Pressable><Card><T style={{ fontWeight: '700' }}>Automatic notification rules →</T>
         <T muted>Turn automatic alerts on/off and edit their wording.</T></Card></Pressable></Link>
       <H>Recent</H>

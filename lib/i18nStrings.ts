@@ -164,6 +164,18 @@ const ROWS: [string, string, string, string, string][] = [
   ['Our leadership', 'Notre direction', 'Nuestro liderazgo', 'A nossa liderança', 'Uongozi wetu'],
   ['View profile →', 'Voir le profil →', 'Ver perfil →', 'Ver perfil →', 'Tazama wasifu →'], ['Send a message', 'Envoyer un message', 'Enviar un mensaje', 'Enviar uma mensagem', 'Tuma ujumbe'],
   ['Sign in to send a message', 'Connectez-vous pour envoyer un message', 'Inicia sesión para enviar un mensaje', 'Entre para enviar uma mensagem', 'Ingia ili utume ujumbe'], ['Leader', 'Responsable', 'Líder', 'Líder', 'Kiongozi'],
+  // friendly match requests
+  ['Request a friendly', 'Demander un match amical', 'Solicitar un amistoso', 'Pedir um jogo amigável', 'Omba mechi ya kirafiki'],
+  ['Request a friendly match', 'Demander un match amical', 'Solicitar un partido amistoso', 'Pedir um jogo amigável', 'Omba mechi ya kirafiki'],
+  ['Send request', 'Envoyer la demande', 'Enviar solicitud', 'Enviar pedido', 'Tuma ombi'],
+  ['Team name', 'Nom de l’équipe', 'Nombre del equipo', 'Nome da equipa', 'Jina la timu'],
+  ['Team logo (required)', 'Logo de l’équipe (obligatoire)', 'Logo del equipo (obligatorio)', 'Logótipo da equipa (obrigatório)', 'Nembo ya timu (lazima)'],
+  ['Choose logo picture', 'Choisir le logo', 'Elegir el logo', 'Escolher o logótipo', 'Chagua nembo'],
+  ['Change logo', 'Changer le logo', 'Cambiar el logo', 'Alterar o logótipo', 'Badilisha nembo'],
+  ['Preferred date', 'Date souhaitée', 'Fecha preferida', 'Data preferida', 'Tarehe unayopendelea'],
+  ['Contact name', 'Nom du contact', 'Nombre de contacto', 'Nome do contacto', 'Jina la mawasiliano'],
+  ['Request sent ⚽', 'Demande envoyée ⚽', 'Solicitud enviada ⚽', 'Pedido enviado ⚽', 'Ombi limetumwa ⚽'],
+  ['Please upload your team logo. It is required.', 'Veuillez ajouter le logo de votre équipe. Il est obligatoire.', 'Sube el logo de tu equipo. Es obligatorio.', 'Carregue o logótipo da sua equipa. É obrigatório.', 'Tafadhali pakia nembo ya timu yako. Ni lazima.'],
 ];
 const IDX: Record<Exclude<Lang, 'en'>, number> = { fr: 1, es: 2, pt: 3, sw: 4 };
 export const DICT: Record<string, Partial<Record<Lang, string>>> = {};

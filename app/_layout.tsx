@@ -52,6 +52,7 @@ function Inner() {
         <Stack.Screen name="family" options={{ title: t('My family') }} />
         <Stack.Screen name="rotas" options={{ title: t('Volunteers & lifts') }} />
         <Stack.Screen name="fans" options={{ title: t('Fan club') }} />
+        <Stack.Screen name="friendly" options={{ title: t('Request a friendly') }} />
         <Stack.Screen name="about" options={{ title: t('About us') }} />
         <Stack.Screen name="leader/[id]" options={{ title: t('Leader') }} />
         <Stack.Screen name="fan-confirm" options={{ title: t('Confirm email') }} />

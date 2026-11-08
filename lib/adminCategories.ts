@@ -3,7 +3,7 @@ export const CATEGORY_ORDER = ['My area', 'People', 'Matches & team', 'Content',
 const GROUPS: Record<string, string[]> = {
   'My area': ['profile', 'orders-me', 'training', 'formations', 'calendar', 'settings-me', 'family-me', 'rotas-me', 'development-me', 'predictor-me', 'invite-me'],
   People: ['users', 'roles', 'security', 'registrations', 'codes', 'players', 'staff', 'playerPrivate', 'families', 'consents', 'registrationFields', 'tryouts', 'tryoutFields', 'positions'],
-  'Matches & team': ['coach', 'tactics', 'matches', 'opponents', 'competitions', 'apiProviders', 'seasons', 'events', 'eventTypes', 'trainingSessions', 'awards', 'awardTypes', 'attendance', 'live', 'match-report', 'ratings', 'development', 'kit', 'rotas'],
+  'Matches & team': ['coach', 'tactics', 'matches', 'friendlies', 'opponents', 'competitions', 'apiProviders', 'seasons', 'events', 'eventTypes', 'trainingSessions', 'awards', 'awardTypes', 'attendance', 'live', 'match-report', 'ratings', 'development', 'kit', 'rotas'],
   Content: ['news', 'media', 'albums', 'announcements', 'pages', 'about', 'hero', 'website', 'header-footer', 'sponsors', 'sponsor-report', 'ads', 'ad-report', 'seo', 'seoPages', 'legal', 'legal-evidence', 'polls', 'video'],
   Shop: ['inventory', 'promotions', 'spin', 'orders', 'payments', 'fees', 'products', 'productCategories', 'paymentProviders'],
   Communication: ['newsletters', 'fans', 'comments', 'referrals', 'assistant', 'chat', 'notifications', 'email-send', 'email-log', 'email-design', 'emailTemplates', 'notificationRules'],

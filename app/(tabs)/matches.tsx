@@ -59,6 +59,9 @@ export default function Matches() {
   const shown = (tab === 'all' ? rows.length : tab === 'live' ? live.length : tab === 'upcoming' ? upcoming.length : results.length);
   return (
     <Screen><PageHead title="Matches" description="Fixtures, live scores and results." /><H>Matches</H><Err msg={error} />
+      <Link href="/friendly" asChild><Pressable accessibilityRole="link" accessibilityLabel="Request a friendly match"><Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <T style={{ fontSize: 22 }}>🤝</T><View style={{ flex: 1 }}><T style={{ fontWeight: '800' }}>Request a friendly match</T><T muted style={{ fontSize: 12 }}>Want to play us? Send your team logo and a date.</T></View><T style={{ fontWeight: '800' }}>→</T>
+      </Card></Pressable></Link>
       <Chips options={TABS} value={tab} onChange={(v: string | null) => setTab(v ?? 'all')} />
       {shown === 0 && <T muted>{tab === 'live' ? 'No match is being played right now.' : tab === 'upcoming' ? 'No upcoming matches.' : tab === 'results' ? 'No results yet.' : 'No matches scheduled.'}</T>}
       {section('🔴 Live now', live, 'live')}
