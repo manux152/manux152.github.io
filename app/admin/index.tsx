@@ -32,7 +32,6 @@ export default function AdminHome() {
     ...(can('rotas.manage') ? [{ href: '/admin/rotas', title: 'Rotas (volunteers and transport)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/seo', title: 'Search visibility (SEO: get found on Google)' }, { href: '/admin/legal', title: 'Legal documents (Terms, Privacy, Cookies)' }, { href: '/admin/legal-evidence', title: 'Acceptance & consent records' }, { href: '/admin/manage/ads', title: 'Ads (place, schedule & rotate adverts)' }, { href: '/admin/ad-report', title: 'Ad report (views and clicks)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/sponsor-report', title: 'Sponsor report (views and clicks)' }] : []),
-    ...(can('matches.manage') ? [{ href: '/admin/friendlies', title: 'Friendly requests (teams asking for a match)' }] : []),
     ...(can('news.manage') ? [{ href: '/admin/polls', title: 'Polls (ask fans a question)' }] : []),
     ...(can('comments.moderate') ? [{ href: '/admin/comments', title: 'Comments (approve, hide, report queue)' }] : []),
     ...(can('settings.manage') ? [{ href: '/admin/referrals', title: 'Referrals (invite-a-friend rewards)' }] : []),
@@ -65,7 +64,7 @@ export default function AdminHome() {
         categories={[{ value: 'all', label: `All (${items.length})` }, ...cats.map((c) => ({ value: c, label: `${c} (${items.filter((i) => categoryOf(i.href) === c).length})` }))]}
         onClear={() => { setQuery(''); setSort('group'); setCategory('all'); }} />}
       {can('admin.access') && shown.length === 0 ? <T muted>Nothing matches. Try another word or clear the filter.</T> : null}
-      {can('admin.access') && <GroupedSections items={shown} grouped={sort === 'group'} getCat={(i) => categoryOf(i.href)} render={(list) => (
+      {can('admin.access') && <GroupedSections items={shown} grouped={sort === 'group'} startClosed forceOpen={query.trim() !== '' || category !== 'all'} getCat={(i) => categoryOf(i.href)} render={(list) => (
         <View style={{ gap: 12 }}>{list.map((i) => (
           <Link key={i.href} href={i.href as any} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>{i.title}</T>{sort === 'group' ? null : <T muted style={{ fontSize: 12 }}>{categoryOf(i.href)}</T>}</Card></Pressable></Link>
         ))}</View>)} />}
