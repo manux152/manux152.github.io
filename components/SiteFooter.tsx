@@ -38,7 +38,7 @@ export function SiteFooter() {
 
   const groups: { title: string; links: [string, string][] }[] = [
     { title: 'Matches', links: [['Fixtures & results', '/matches'], ['Request a friendly', '/friendly'], ['League table', '/table'], ['Statistics', '/stats'], ['Awards', '/awards']] },
-    { title: 'The club', links: [['Squad', '/players'], ['News', '/news'], ['Photos & videos', '/media'], ['Calendar', '/calendar'], ['Season review', '/season-review']] },
+    { title: 'The club', links: [['About us', '/about'], ['Squad', '/players'], ['News', '/news'], ['Photos & videos', '/media'], ['Calendar', '/calendar'], ['Season review', '/season-review']] },
     { title: 'Get involved', links: [['Tryouts', '/tryouts'], ...(shopOn ? [['Shop', '/shop'] as [string, string]] : []), ['Fan club', '/fans'], ['Join the team', '/register'], ['Search', '/search']] },
   ];
   const mine: [string, string][] = [...(session ? [['My dashboard', '/dashboard'] as [string, string], ['My profile', '/profile'] as [string, string]] : [['Sign in', '/login'] as [string, string]]), ['Settings & accessibility', '/settings']];
