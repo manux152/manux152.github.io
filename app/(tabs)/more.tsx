@@ -13,7 +13,7 @@ export default function More() {
     <Screen>
       <H>More</H>
       {more.map((n) => <Link key={n.id} href={n.route as any} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>{n.label}</T></Card></Pressable></Link>)}
-      <Link href="/about" asChild><Pressable accessibilityRole="link" accessibilityLabel="About us" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}><H>About</H><H>→</H></Pressable></Link>
+      <Link href="/about" asChild><Pressable><Card><T style={{ fontWeight: '700' }}>About</T></Card></Pressable></Link>
       {(pages.data as any[]).map((p) => <Link key={p.id} href={`/page/${p.slug}`} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>{p.title}</T></Card></Pressable></Link>)}
     </Screen>
   );
