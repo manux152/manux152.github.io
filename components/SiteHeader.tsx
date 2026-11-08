@@ -14,14 +14,16 @@ import { NavAppearancePicker } from './NavAppearancePicker';
 import { NavBackground } from './NavBackground';
 import { Avatar, T } from './ui';
 import { PromoStrip } from './PromoStrip';
+import { GroupedMenu } from './GroupedMenu';
+import { buildMenuGroups } from '../lib/menuGroups';
 import { useChatUnread } from '../lib/chat';
 
 // Classic masthead: logo and quick links on top, a ruled main-menu row underneath (wide screens);
 // logo + menu button on phones, with the full menu in a sheet.
 export function SiteHeader() {
   const { nav, settings, session, can, pages, profile, signOut } = useApp(); const { count } = useCart(); const { wide, maxWidth, width, gutter, navPadV, navPadH, navFont, logoH, avatar } = useLayout();
-  const { colors, fs, accentFor } = useTheme(); const look = useNavLook(); const path = usePathname(); const insets = useSafeAreaInsets(); const router = useRouter();
-  const [menu, setMenu] = useState<null | 'more' | 'all' | 'look' | 'account'>(null); const [headH, setHeadH] = useState(110); const [openGroups, setOpenGroups] = useState<string[]>([]);
+  const { colors, fs } = useTheme(); const look = useNavLook(); const path = usePathname(); const insets = useSafeAreaInsets(); const router = useRouter();
+  const [menu, setMenu] = useState<null | 'more' | 'all' | 'look' | 'account'>(null); const [headH, setHeadH] = useState(110);
   const { tabs, more } = splitNav(nav, can, 99);
   const shopOn = settings.shop_enabled !== false;
   const top = Platform.OS === 'web' ? 0 : insets.top;
@@ -54,62 +56,10 @@ export function SiteHeader() {
   const row = (label: string, href: string) => (
     <Pressable key={href + label} accessibilityRole="link" onPress={() => go(href)} style={{ paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}><T style={{ fontWeight: active(href) ? '800' : '600', fontSize: 16 }}>{label}</T></Pressable>
   );
-  // Mobile menu: every link sits in a named group that expands and collapses.
-  const ROUTE_GROUP: Record<string, string> = {
-    '/matches': 'Competition', '/table': 'Competition', '/calendar': 'Competition', '/stats': 'Competition', '/head-to-head': 'Competition',
-    '/players': 'Team', '/formations': 'Team', '/training': 'Team', '/awards': 'Team', '/development': 'Team',
-    '/news': 'Club', '/media': 'Club', '/season-review': 'Club', '/about': 'Club',
-    '/fans': 'Fans', '/assistant': 'Fans', '/spin': 'Fans', '/predictor': 'Fans',
-    '/tryouts': 'Join & Support', '/friendly': 'Join & Support', '/shop': 'Join & Support',
-  };
-  const GROUP_ORDER = ['Competition', 'Team', 'Club', 'Fans', 'Join & Support', 'Account', 'Legal'];
-  const LEGAL_SLUGS = ['privacy', 'terms', 'cookies'];
-  const menuGroups = () => {
-    const g: Record<string, { label: string; href: string; badge?: number }[]> = {};
-    const add = (k: string, label: string, href: string, badge?: number) => { const list = (g[k] = g[k] || []); if (!list.some((x) => x.href === href)) list.push({ label, href, badge }); };
-    let home: { label: string; href: string } | null = null;
-    for (const n of [...tabs, ...more]) { if (n.route === '/') home = { label: n.label, href: n.route }; else add(ROUTE_GROUP[n.route] ?? 'Club', n.label, n.route); }
-    for (const p of pages) add(LEGAL_SLUGS.includes(p.slug) ? 'Legal' : 'Club', p.title, LEGAL_SLUGS.includes(p.slug) ? `/legal/${p.slug}` : `/page/${p.slug}`);
-    add('Fans', 'Ask the assistant', '/assistant');
-    if (shopOn && settings.spin_enabled !== false) add('Fans', 'Spin the wheel', '/spin');
-    if (session) add('Account', 'My account', '/account');
-    if (session) add('Account', 'Dashboard', '/dashboard');
-    if (chatOn) add('Account', 'Messages', '/chat', unread);
-    add('Account', 'Settings', '/settings');
-    if (can('admin.access')) add('Account', 'Admin', '/admin');
-    return { home, groups: GROUP_ORDER.filter((k) => g[k]?.length).map((k) => ({ key: k, items: g[k] })) };
-  };
+  // Mobile menu: every link sits in a named group that expands and collapses (shared with the More page).
   const groupedMenu = () => {
-    const { home, groups } = menuGroups();
-    const gold = accentFor(look.accent);
-    const toggle = (k: string) => setOpenGroups((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
-    return (
-      <>
-        {home ? row(home.label, home.href) : null}
-        {groups.map((gr) => {
-          const open = openGroups.includes(gr.key) || gr.items.some((i) => active(i.href));
-          const total = gr.items.reduce((a, i) => a + (i.badge || 0), 0);
-          return (
-            <View key={gr.key} style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-              <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={`${gr.key}, ${open ? 'collapse' : 'expand'}`} onPress={() => toggle(gr.key)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 8 }}>
-                <T style={{ fontWeight: '800', fontSize: 13, letterSpacing: 1.2, textTransform: 'uppercase', color: gold }}>{gr.key}{total > 0 ? ` (${total > 99 ? '99+' : total})` : ''}</T>
-                <T style={{ fontSize: 14, color: gold }}>{open ? '▴' : '▾'}</T>
-              </Pressable>
-              {open ? (
-                <View style={{ paddingLeft: 12, paddingBottom: 6 }}>
-                  {gr.items.map((i) => (
-                    <Pressable key={i.href + i.label} accessibilityRole="link" onPress={() => go(i.href)} style={{ paddingVertical: 11, paddingHorizontal: 8 }}>
-                      <T style={{ fontWeight: active(i.href) ? '800' : '600', fontSize: 16 }}>{i.label}{i.badge ? ` (${i.badge > 99 ? '99+' : i.badge})` : ''}</T>
-                    </Pressable>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          );
-        })}
-        {!session ? row('Sign in', '/login') : null}
-      </>
-    );
+    const { home, groups } = buildMenuGroups({ navItems: [...tabs, ...more], pages, signedIn: !!session, chatOn, unread, spinOn: shopOn && settings.spin_enabled !== false, isAdmin: can('admin.access') });
+    return (<><GroupedMenu home={home} groups={groups} onGo={go} active={active} />{!session ? row('Sign in', '/login') : null}</>);
   };
   const sheet = (title: string, body: React.ReactNode) => (
     <Modal transparent animationType="fade" visible onRequestClose={closeAnd}>

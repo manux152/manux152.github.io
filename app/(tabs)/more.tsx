@@ -1,20 +1,23 @@
-import { Link } from 'expo-router';
-import { Pressable } from 'react-native';
-import { Screen, H, Card, T } from '../../components/ui';
+import { useRouter, usePathname } from 'expo-router';
+import { Screen, H } from '../../components/ui';
+import { GroupedMenu } from '../../components/GroupedMenu';
 import { useApp } from '../../lib/app-context';
-import { useTable } from '../../lib/useQuery';
+import { useChatUnread } from '../../lib/chat';
+import { buildMenuGroups } from '../../lib/menuGroups';
 import { splitNav } from '../../lib/nav';
 
+// Same groups and dropdowns as the side menu.
 export default function More() {
-  const { nav, settings, can } = useApp();
-  const { more } = splitNav(nav, can, Number(settings.max_tabs ?? 5));
-  const pages = useTable('pages', (q) => q.eq('is_published', true).order('sort_order'));
+  const { nav, settings, session, can, pages } = useApp(); const router = useRouter(); const path = usePathname();
+  const { tabs, more } = splitNav(nav, can, 99);
+  const chatOn = !!session && settings.chat_enabled !== false && settings.chat_enabled !== 'false'; const unread = useChatUnread(chatOn);
+  const shopOn = settings.shop_enabled !== false;
+  const { home, groups } = buildMenuGroups({ navItems: [...tabs, ...more], pages, signedIn: !!session, chatOn, unread, spinOn: shopOn && settings.spin_enabled !== false, isAdmin: can('admin.access') });
+  const active = (r: string) => (r === '/' ? path === '/' : path === r || path.startsWith(r + '/'));
   return (
     <Screen>
       <H>More</H>
-      {more.map((n) => <Link key={n.id} href={n.route as any} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>{n.label}</T></Card></Pressable></Link>)}
-      <Link href="/about" asChild><Pressable><Card><T style={{ fontWeight: '700' }}>About</T></Card></Pressable></Link>
-      {(pages.data as any[]).map((p) => <Link key={p.id} href={`/page/${p.slug}`} asChild><Pressable><Card><T style={{ fontWeight: '700' }}>{p.title}</T></Card></Pressable></Link>)}
+      <GroupedMenu home={home} groups={groups} onGo={(h) => router.push(h as any)} active={active} />
     </Screen>
   );
 }
