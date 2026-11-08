@@ -96,7 +96,7 @@ export function useLiveMatch(matchId: string | undefined, live: boolean) {
   const load = useCallback(async () => {
     if (!matchId) return;
     const [m, e, c] = await Promise.all([
-      supabase.from('matches').select('*, opponents(name)').eq('id', matchId).maybeSingle(),
+      supabase.from('matches').select('*, opponents(name, logo_url)').eq('id', matchId).maybeSingle(),
       supabase.from('match_events').select('*, event_types(label,stat_key), player:players!match_events_player_id_fkey(full_name), assist:players!match_events_related_player_id_fkey(full_name)').eq('match_id', matchId).order('minute', { ascending: true }),
       supabase.from('match_commentary').select('*').eq('match_id', matchId).order('created_at', { ascending: false }).limit(100),
     ]);
